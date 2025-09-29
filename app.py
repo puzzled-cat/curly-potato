@@ -68,7 +68,7 @@ def check_feeding_times():
             )
             deadline = feed_time + timedelta(minutes=30)
             if now > deadline and not feeding[t_str] and not alerts_sent[t_str]:
-                alert_line = f"Missed feeding for {t_str} at {now.strftime('%Y-%m-%d %H:%M:%S')}"
+                alert_line = f"Missed feeding for {t_str} at {now.strftime('%Y-%m-%d %H:%M')}"
                 write_alert(alert_line)
                 alerts_sent[t_str] = True
         time.sleep(60)
