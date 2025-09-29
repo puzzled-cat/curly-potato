@@ -51,7 +51,7 @@ def set_feeding():
             now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             write_alert(f"FED {time_str} at {now_str} (via panel)")
         else:
-            # Optional: also log when user unsets (can comment out if not needed)
+            # Optional: also log when user unsets
             now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             write_alert(f"UNSET {time_str} at {now_str} (via panel)")
 

@@ -1,9 +1,9 @@
 import os
 from dotenv import load_dotenv
-load_dotenv()  # loads .env if present
 import discord
-import asyncio
 from discord.ext import tasks
+
+load_dotenv()  # loads .env if present
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
@@ -11,10 +11,6 @@ CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-@client.event
-async def on_ready():
-    print(f"Bot logged in as {client.user}")
-    check_alerts.start()
 @client.event
 async def on_ready():
     print(f"✅ Logged in as {client.user}")
@@ -34,11 +30,7 @@ async def check_alerts():
 
         channel = client.get_channel(CHANNEL_ID)
         for line in lines:
-            # Examples of lines:
-            # "Missed feeding for 09:00 at 2025-09-29 09:32:00"
-            # "FED 12:00 at 2025-09-29 12:01:11 (via panel)"
             if line.startswith("FED"):
-                # FED <time> at <timestamp> (...)
                 parts = line.split()
                 time_str = parts[1]
                 ts = " ".join(parts[3:5]) if "at" in parts else ""
