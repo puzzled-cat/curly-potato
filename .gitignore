@@ -1,2 +1,4 @@
 .env
 alerts.log
+state.json
+/.venv
