@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Curly Potato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
+
 <body>
   <header class="toolbar">
     <div id="timeDisplay">—</div>
@@ -13,7 +15,7 @@
 
   <main class="container">
     <section class="card" id="catFeedCard">
-      <h2>Cat Feeding</h2>
+      <h2 id="feed-header">Selkie and Síog's Feeding Chart</h2>
       <div class="feed-grid">
         {% for t in feed_times %}
         <div class="feed-row">
@@ -22,6 +24,7 @@
             <input type="checkbox" data-feed="{{ t }}">
             <span class="slider-toggle"></span>
           </label>
+          <span class="feed-status" data-status="{{ t }}">Not fed</span>
         </div>
         {% endfor %}
       </div>
@@ -30,4 +33,5 @@
 
   <script src="/static/main.js"></script>
 </body>
+
 </html>
