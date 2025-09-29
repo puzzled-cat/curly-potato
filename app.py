@@ -3,9 +3,13 @@ from datetime import datetime, timedelta
 import threading
 import time
 import os
+import json
 
 app = Flask(__name__)
 
+REMIND_EVERY_MIN = 30
+
+STATE_FILE = "state.json"
 # Feeding times (24h)
 FEED_TIMES = ["09:00", "12:00", "17:00"]
 
@@ -14,6 +18,7 @@ feeding = {t: False for t in FEED_TIMES}
 
 # Track alerts sent (no spam)
 alerts_sent = {t: False for t in FEED_TIMES}
+last_alert_at = {t: None for t in FEED_TIMES}
 
 
 # --- Helper to log events for Discord bot ---
@@ -23,6 +28,27 @@ def write_alert(line: str):
     with open("alerts.log", "a") as f:
         f.write(line + "\n")
     print(f"[ALERT LOGGED] {line}")
+   
+def save_state():
+    data = {"feeding": feeding, "alerts_sent": alerts_sent, "last_alert_at": last_alert_at}
+    tmp = STATE_FILE + ".tmp"
+    with open(tmp, "w") as f: json.dump(data, f)
+    os.replace(tmp, STATE_FILE)
+
+def load_state():
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r") as f:
+                data = json.load(f)
+            feeding.update(data.get("feeding", {}))
+            alerts_sent.update(data.get("alerts_sent", {}))
+            # normalize last_alert_at to known keys
+            la = data.get("last_alert_at", {})
+            for k in last_alert_at:
+                last_alert_at[k] = la.get(k)
+            print(f"[STATE] Loaded {STATE_FILE}")
+        except Exception as e:
+            print(f"[STATE] Failed to load: {e}")
 
 
 @app.route("/")
@@ -37,42 +63,67 @@ def get_feeding():
 
 @app.post("/api/feeding")
 def set_feeding():
-    """Called when user toggles a feed slider."""
     data = request.get_json() or {}
     time_str = data.get("time")
     fed = bool(data.get("fed"))
 
     if time_str in feeding:
         feeding[time_str] = fed
-        alerts_sent[time_str] = False  # reset missed alert flag if user changes state
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Log a feed confirmation event when toggled to True
         if fed:
-            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # Mark done and prevent future prompts for today
+            alerts_sent[time_str] = True
+            last_alert_at[time_str] = None
             write_alert(f"FED {time_str} at {now_str} (via panel)")
         else:
-            # Optional: also log when user unsets
-            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # Re-open the slot; allow future prompts
+            alerts_sent[time_str] = False
+            last_alert_at[time_str] = None
             write_alert(f"UNSET {time_str} at {now_str} (via panel)")
+
+        save_state()
 
     return jsonify(feeding)
 
 
+def parse_iso(s):
+    return datetime.fromisoformat(s) if s else None
+
+def iso_now():
+    return datetime.now().isoformat(timespec="seconds")
+
 def check_feeding_times():
-    """Background thread to check if feeding missed by 30 min."""
+    """Send first alert at T+30min, then reminders every REMIND_EVERY_MIN while still not fed."""
     while True:
         now = datetime.now()
         for t_str in FEED_TIMES:
-            feed_time = datetime.strptime(t_str, "%H:%M").replace(
-                year=now.year, month=now.month, day=now.day
-            )
+            feed_time = datetime.strptime(t_str, "%H:%M").replace(year=now.year, month=now.month, day=now.day)
             deadline = feed_time + timedelta(minutes=30)
-            if now > deadline and not feeding[t_str] and not alerts_sent[t_str]:
-                alert_line = f"Missed feeding for {t_str} at {now.strftime('%Y-%m-%d %H:%M')}"
-                write_alert(alert_line)
-                alerts_sent[t_str] = True
-        time.sleep(60)
 
+            # Skip future times entirely
+            if now <= deadline:
+                continue
+
+            if not feeding[t_str]:
+                if not alerts_sent[t_str]:
+                    # First alert
+                    write_alert(f"Missed feeding for {t_str} at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+                    alerts_sent[t_str] = True
+                    last_alert_at[t_str] = iso_now()
+                    save_state()
+                else:
+                    # Already alerted — send reminder every REMIND_EVERY_MIN
+                    last = parse_iso(last_alert_at[t_str])
+                    if last is None or (now - last) >= timedelta(minutes=REMIND_EVERY_MIN):
+                        write_alert(f"Reminder: {t_str} still not fed at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+                        last_alert_at[t_str] = iso_now()
+                        save_state()
+            else:
+                # Fed — nothing to do
+                pass
+
+        time.sleep(60)
 
 # --- Start background scheduler thread only once ---
 def start_scheduler_once():
@@ -83,6 +134,7 @@ def start_scheduler_once():
 
 
 if __name__ == "__main__":
+    load_state()
     # Only start thread in the main process (avoids duplicate alerts in debug)
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
         start_scheduler_once()
