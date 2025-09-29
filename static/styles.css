@@ -11,6 +11,7 @@ body {
   padding: 10px;
   font-size: 1.2rem;
   border-bottom: 1px solid #232838;
+  margin-bottom: 20px;
 }
 
 .container {
@@ -22,6 +23,36 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+#catFeedCard h2 {
+  padding: 0;
+  margin: 0;
+  /* optional: also remove default margin */
+}
+
+#feed-header {
+  text-align: center;
+}
+
+.feed-status {
+  min-width: 70px;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #bbb;
+  margin-left: 8px;
+}
+
+.feed-status.fed {
+  color: #35d07f;
+  /* green */
+  font-weight: 600;
+}
+
+.feed-status.not-fed {
+  color: #b23a3a;
+  /* red */
+  font-weight: 600;
+}
+
 .card {
   background: #161a22;
   border: 1px solid #232838;
@@ -30,22 +61,60 @@ body {
   box-shadow: 0 4px 18px rgba(0, 0, 0, .25);
 }
 
-.feed-grid { display: flex; flex-direction: column; gap: 10px; }
-.feed-row { display: flex; justify-content: space-between; align-items: center; }
-.feed-time { font-size: 1.1rem; }
+.feed-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 0 0 0;
+}
+
+.feed-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.feed-time {
+  font-size: 1.1rem;
+}
 
 /* Toggle switch */
-.switch { position: relative; display: inline-block; width: 56px; height: 30px; }
-.switch input { display: none; }
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 30px;
+}
+
+.switch input {
+  display: none;
+}
+
 .slider-toggle {
-  position: absolute; inset: 0;
-  background: #444a5f; border-radius: 999px; transition: 0.2s;
+  position: absolute;
+  inset: 0;
+  background: #444a5f;
+  border-radius: 999px;
+  transition: 0.2s;
   box-shadow: inset 0 0 0 1px #2a3044;
 }
+
 .slider-toggle:before {
-  content: ""; position: absolute;
-  width: 24px; height: 24px; left: 3px; top: 3px;
-  background: #e6e6e6; border-radius: 50%; transition: 0.2s;
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 3px;
+  top: 3px;
+  background: #e6e6e6;
+  border-radius: 50%;
+  transition: 0.2s;
 }
-.switch input:checked + .slider-toggle { background: #2a6af3; }
-.switch input:checked + .slider-toggle:before { transform: translateX(26px); }
+
+.switch input:checked+.slider-toggle {
+  background: #2a6af3;
+}
+
+.switch input:checked+.slider-toggle:before {
+  transform: translateX(26px);
+}

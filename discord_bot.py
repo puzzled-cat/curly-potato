@@ -22,7 +22,7 @@ async def on_ready():
     await channel.send("🐾 CatPanel bot is online.")
     check_alerts.start()
 
-@tasks.loop(seconds=10)
+@tasks.loop(seconds=30)
 async def check_alerts():
     if CHANNEL_ID == 0:
         return
