@@ -5,8 +5,8 @@ from discord.ext import tasks
 
 load_dotenv()  # loads .env if present
 
-TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
+TOKEN = os.getenv("DISCORD_ALERTS_TOKEN")
+CHANNEL_ID = int(os.getenv("DISCORD_ALERTS_CHANNEL_ID", "0"))
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)

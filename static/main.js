@@ -1,6 +1,6 @@
 const messages = [
   "Remember to stay hydrated!",
-  "Remember to do the recycling",
+  "Remember to do the recycling!",
 ];
 
 let currentIndex = 0;
@@ -10,8 +10,8 @@ function cycleMessages() {
   currentIndex = (currentIndex + 1) % messages.length;
 }
 
-cycleMessages(); // show first immediately
-setInterval(cycleMessages, 10000); // change every 10 seconds
+cycleMessages();
+setInterval(cycleMessages, 10000);
 
 async function fetchFeeding() {
   const res = await fetch("/api/feeding");
@@ -45,11 +45,9 @@ function loadCatAvatars() {
     img.src = `https://cataas.com/cat?type=square&${Math.random()}`;
   });
 }
+document.addEventListener('DOMContentLoaded', loadCatAvatars());
 
-// Call after DOMContentLoaded
-document.addEventListener('DOMContentLoaded', loadCatAvatars);
-
-// Optional: click an avatar to refresh all
+// click an avatar to refresh all
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('cat-avatar')) loadCatAvatars();
 });
@@ -98,7 +96,7 @@ function renderToolbarIcons() {
 
   const today = new Date().getDay();
 
-  if (today === 3) { // Wednesday
+  if (today === 3) { // Wednesday / binday
     const binIcon = document.createElement("span");
     binIcon.className = "icon material-symbols-outlined";
     binIcon.textContent = "delete";
@@ -176,7 +174,87 @@ function renderNextDays(data) {
     container.appendChild(el);
   }
 }
-// <div class="wx-rain">${typeof rain === "number" ? rain + "%" : "—"}</div>
+
+async function loadLists() {
+  const res = await fetch('/api/lists');
+  const data = await res.json();
+  const select = document.getElementById('listSelect');
+  select.innerHTML = '';
+  data.lists.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    select.appendChild(opt);
+  });
+  if (data.lists.length > 0) {
+    renderList(select.value);
+  }
+}
+
+async function renderList(name) {
+  const res = await fetch(`/api/lists/${name}`);
+  const data = await res.json();
+  const listEl = document.getElementById('listItems');
+  listEl.innerHTML = '';
+
+  data.items.forEach(item => {
+    const li = document.createElement('li');
+    if (item.done) li.classList.add('done');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = item.done;
+    checkbox.addEventListener('change', async () => {
+      await fetch(`/api/lists/${name}/items/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ done: checkbox.checked })
+      });
+      renderList(name);
+    });
+
+    const text = document.createElement('span');
+    text.textContent = item.text;
+
+    const del = document.createElement('button');
+    del.innerHTML = '✖';
+    del.addEventListener('click', async () => {
+      await fetch(`/api/lists/${name}/items/${item.id}`, { method: 'DELETE' });
+      renderList(name);
+    });
+
+    li.appendChild(checkbox);
+    li.appendChild(text);
+    li.appendChild(del);
+    listEl.appendChild(li);
+  });
+}
+
+document.getElementById('listSelect').addEventListener('change', (e) => {
+  renderList(e.target.value);
+});
+
+document.getElementById('addItemBtn').addEventListener('click', async () => {
+  const name = document.getElementById('listSelect').value;
+  const textEl = document.getElementById('newItemText');
+  const text = textEl.value.trim();
+  if (!text) return;
+  await fetch(`/api/lists/${name}/items`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+  textEl.value = '';
+  renderList(name);
+});
+
+document.getElementById('clearDoneBtn').addEventListener('click', async () => {
+  const name = document.getElementById('listSelect').value;
+  await fetch(`/api/lists/${name}/clear_done`, { method: 'POST' });
+  renderList(name);
+});
+
+document.addEventListener('DOMContentLoaded', loadLists);
 
 function renderWeatherCard(data) {
   const now = data.current_weather || {};

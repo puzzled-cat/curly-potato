@@ -49,11 +49,6 @@
       <small class="muted" id="catFactBox">-</small>
     </section>
 
-    <!-- <section class="card panel active" id="card-feed" role="tabpanel" aria-labelledby="tab-feed">
-      <h2>Second Panel</h2>
-      <p>Additional interface content goes here.</p>
-    </section> -->
-
     <section class="card panel" id="card-logs" role="tabpanel">
       <h2 style="text-align: center;" class="muted">Belfast</h2>
       <h3 style="text-align: center;" class="muted">Today</h3>
@@ -82,7 +77,20 @@
 
     <section class="card panel" id="card-settings" role="tabpanel">
       <h2>Lists and Reminders</h2>
-      <p>Options go here…</p>
+      <!-- List Selector -->
+      <div class="list-header">
+        <select id="listSelect"></select>
+        <button id="clearDoneBtn" class="btn btn-ghost">Clear Completed</button>
+      </div>
+
+      <!-- Add Item -->
+      <div class="list-add">
+        <input id="newItemText" type="text" placeholder="Add new item…" />
+        <button id="addItemBtn" class="btn btn-primary">Add</button>
+      </div>
+
+      <!-- List Items -->
+      <ul id="listItems" class="list-items"></ul>
     </section>
 
   </main>
