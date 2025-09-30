@@ -2,3 +2,4 @@
 alerts.log
 state.json
 /.venv
+lists.json
