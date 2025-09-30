@@ -10,7 +10,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
   </style>
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=delete" />
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
 
 <body>
@@ -22,9 +22,9 @@
 
   <!-- Tabs -->
   <nav class="tabs" role="tablist" aria-label="Panels">
-    <button class="tab" role="tab" data-target="card-feed" aria-selected="true">Today</button>
+    <button class="tab" role="tab" data-target="card-feed" aria-selected="true">Home</button>
     <button class="tab" role="tab" data-target="card-logs">Weather</button>
-    <button class="tab" role="tab" data-target="card-settings">Settings</button>
+    <button class="tab" role="tab" data-target="card-settings">Lists and Reminders</button>
   </nav>
 
   <!-- Cards -->
@@ -35,6 +35,7 @@
         {% for t in feed_times %}
         <div class="feed-row">
           <div class="feed-time">{{ t }}</div>
+          <img class="cat-avatar" alt="Cat" src="" />
           <label class="switch">
             <input type="checkbox" data-feed="{{ t }}">
             <span class="slider-toggle"></span>
@@ -43,15 +44,20 @@
         </div>
         {% endfor %}
       </div>
+      <br>
+      <hr>
+      <small class="muted" id="catFactBox">-</small>
     </section>
 
-    <section class="card panel active" id="card-feed" role="tabpanel" aria-labelledby="tab-feed">
+    <!-- <section class="card panel active" id="card-feed" role="tabpanel" aria-labelledby="tab-feed">
       <h2>Second Panel</h2>
       <p>Additional interface content goes here.</p>
-    </section>
+    </section> -->
 
     <section class="card panel" id="card-logs" role="tabpanel">
-      <h2>Weather</h2>
+      <h2 style="text-align: center;" class="muted">Belfast</h2>
+      <h3 style="text-align: center;" class="muted">Today</h3>
+      <p style="text-align: center;" id="wx-updated" class="muted">—</p>
       <div id="wx" class="wx-grid">
         <div>
           <div class="wx-label">Now</div>
@@ -70,13 +76,12 @@
           <div id="wx-range" class="wx-value">—</div>
         </div>
       </div>
-      <small id="wx-updated" class="muted">—</small>
-      <h3 style="margin-top:12px">Next days</h3>
+      <h3 style="margin-top:12px">Upcoming</h3>
       <div id="wx-next" class="wx-next"></div>
     </section>
 
     <section class="card panel" id="card-settings" role="tabpanel">
-      <h2>Settings</h2>
+      <h2>Lists and Reminders</h2>
       <p>Options go here…</p>
     </section>
 

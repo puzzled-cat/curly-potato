@@ -158,10 +158,33 @@ body {
 
 .feed-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   /* time | switch | status */
   align-items: center;
   gap: var(--space-1);
+}
+
+.cat-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #232838;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+}
+
+/* Optional: shrink/hide on very small screens */
+@media (max-width: 380px) {
+  .cat-avatar {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 330px) {
+  .cat-avatar {
+    display: none;
+  }
 }
 
 .feed-time {
@@ -286,12 +309,14 @@ body {
   grid-template-columns: 1fr;
   gap: 8px;
   margin-top: 6px;
+  text-align: center;
 }
 
 .wx-day {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
+  text-align: center;
   gap: 10px;
   padding: 8px 10px;
   background: #121722;
@@ -306,6 +331,10 @@ body {
 
 .wx-day .wx-ico {
   font-size: 1.1rem;
+}
+
+.wx-ico {
+  padding-right: 10px;
 }
 
 .wx-day .wx-minmax {
