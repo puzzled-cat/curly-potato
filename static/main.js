@@ -1,6 +1,6 @@
 const messages = [
   "Remember to stay hydrated!",
-  "Remember to do the recycling",
+  "Remember to do the recycling!",
 ];
 
 let currentIndex = 0;
@@ -10,8 +10,8 @@ function cycleMessages() {
   currentIndex = (currentIndex + 1) % messages.length;
 }
 
-cycleMessages(); // show first immediately
-setInterval(cycleMessages, 10000); // change every 10 seconds
+cycleMessages();
+setInterval(cycleMessages, 10000);
 
 async function fetchFeeding() {
   const res = await fetch("/api/feeding");
@@ -45,11 +45,9 @@ function loadCatAvatars() {
     img.src = `https://cataas.com/cat?type=square&${Math.random()}`;
   });
 }
+document.addEventListener('DOMContentLoaded', loadCatAvatars());
 
-// Call after DOMContentLoaded
-document.addEventListener('DOMContentLoaded', loadCatAvatars);
-
-// Optional: click an avatar to refresh all
+// click an avatar to refresh all
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('cat-avatar')) loadCatAvatars();
 });
@@ -98,7 +96,7 @@ function renderToolbarIcons() {
 
   const today = new Date().getDay();
 
-  if (today === 3) { // Wednesday
+  if (today === 3) { // Wednesday / binday
     const binIcon = document.createElement("span");
     binIcon.className = "icon material-symbols-outlined";
     binIcon.textContent = "delete";
@@ -176,7 +174,6 @@ function renderNextDays(data) {
     container.appendChild(el);
   }
 }
-// <div class="wx-rain">${typeof rain === "number" ? rain + "%" : "—"}</div>
 
 async function loadLists() {
   const res = await fetch('/api/lists');
@@ -257,9 +254,7 @@ document.getElementById('clearDoneBtn').addEventListener('click', async () => {
   renderList(name);
 });
 
-// Initialize on load
 document.addEventListener('DOMContentLoaded', loadLists);
-
 
 function renderWeatherCard(data) {
   const now = data.current_weather || {};

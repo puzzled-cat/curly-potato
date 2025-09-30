@@ -8,9 +8,7 @@ import json
 app = Flask(__name__)
 
 REMIND_EVERY_MIN = 30
-
 STATE_FILE = "state.json"
-# Feeding times (24h)
 FEED_TIMES = ["09:00", "12:00", "17:00"]
 
 # Track whether each slot has been fed
@@ -87,11 +85,9 @@ def load_state():
 def index():
     return render_template("index.html", feed_times=FEED_TIMES)
 
-
 @app.get("/api/feeding")
 def get_feeding():
     return jsonify(feeding)
-
 
 @app.post("/api/feeding")
 def set_feeding():
@@ -131,6 +127,7 @@ def check_feeding_times():
         now = datetime.now()
         for t_str in FEED_TIMES:
             feed_time = datetime.strptime(t_str, "%H:%M").replace(year=now.year, month=now.month, day=now.day)
+            
             deadline = feed_time + timedelta(minutes=30)
 
             # Skip future times entirely
@@ -221,14 +218,12 @@ def api_clear_done(name):
     return jsonify({"ok": True})
 # ---------- end Lists API ----------
 
-
 # --- Start background scheduler thread only once ---
 def start_scheduler_once():
     """Prevents double-threading when Flask debug reloader is active."""
     t = threading.Thread(target=check_feeding_times, daemon=True)
     t.start()
     print("[SCHEDULER] Feeding check thread started.")
-
 
 if __name__ == "__main__":
     load_state()

@@ -1,7 +1,3 @@
-# discord_lists.py
-# Lists & Reminders bot — compatible with discord.py versions where CommandTree.group() isn't available.
-# Functions/behavior unchanged; we register the /list group via app_commands.Group + tree.add_command().
-
 import os
 from dotenv import load_dotenv
 import discord
@@ -12,9 +8,9 @@ import aiohttp
 # -------- config & client --------
 load_dotenv()
 
-TOKEN = os.getenv("DISCORD_LIST_TOKEN")                                   # token for THIS lists bot
-LISTS_CHANNEL_ID = int(os.getenv("DISCORD_LIST_CHANNEL_ID", "0"))   # optional guard
-API_BASE = os.getenv("API_BASE", "http://localhost:5000")            # your Flask API
+TOKEN = os.getenv("DISCORD_LIST_TOKEN")
+LISTS_CHANNEL_ID = int(os.getenv("DISCORD_LIST_CHANNEL_ID", "0"))
+API_BASE = os.getenv("API_BASE", "http://localhost:5000")
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
