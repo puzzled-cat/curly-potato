@@ -1,5 +1,4 @@
 const messages = [
-  "Don't forget to smile :)",
   "Remember to stay hydrated!",
   "Remember to do the recycling",
 ];
@@ -33,6 +32,41 @@ function renderFeeding(feedMap) {
     cb.checked = !!feedMap[cb.dataset.feed];
   });
 }
+
+async function getCatFact() {
+  const res = await fetch("https://catfact.ninja/fact");
+  if (!res.ok) throw new Error("Failed to fetch cat fact");
+  const data = await res.json();
+  return data.fact;
+}
+
+function loadCatAvatars() {
+  document.querySelectorAll('.cat-avatar').forEach(img => {
+    img.src = `https://cataas.com/cat?type=square&${Math.random()}`;
+  });
+}
+
+// Call after DOMContentLoaded
+document.addEventListener('DOMContentLoaded', loadCatAvatars);
+
+// Optional: click an avatar to refresh all
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('cat-avatar')) loadCatAvatars();
+});
+
+
+async function displayCatFact() {
+  try {
+    const fact = await getCatFact();
+    document.getElementById("catFactBox").textContent = fact;
+  } catch (err) {
+    console.error(err);
+    document.getElementById("catFactBox").textContent = "Couldn't fetch a cat fact";
+  }
+}
+
+displayCatFact();
+setInterval(displayCatFact, 5 * 60 * 1000);
 
 function updateStatusLabels(feedMap) {
   document.querySelectorAll('.feed-status').forEach(span => {
@@ -103,14 +137,14 @@ async function fetchWeatherBelfast() {
 
 function wxIcon(code) {
   // Minimal mapping (Open-Meteo weather codes)
-  if ([0].includes(code)) return "☀️";
-  if ([1, 2].includes(code)) return "⛅";
-  if ([3].includes(code)) return "☁️";
-  if ([45, 48].includes(code)) return "🌫️";
-  if ([51, 53, 55, 61, 63, 65].includes(code)) return "🌧️";
-  if ([80, 81, 82].includes(code)) return "🌦️";
-  if ([95, 96, 99].includes(code)) return "⛈️";
-  if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
+  if ([0].includes(code)) return "<span class='material-symbols-outlined'>sunny</span>";
+  if ([1, 2].includes(code)) return "<span class='material-symbols-outlined'>partly_cloudy_day</span>";
+  if ([3].includes(code)) return "<span class='material-symbols-outlined'>cloud</span>";;
+  if ([45, 48].includes(code)) return "<span class='material-symbols-outlined'>foggy</span>";;
+  if ([51, 53, 55, 61, 63, 65].includes(code)) return "<span class='material-symbols-outlined'>rainy</span>";;
+  if ([80, 81, 82].includes(code)) return "<span class='material-symbols-outlined'>sunny_snowing</span>";
+  if ([95, 96, 99].includes(code)) return "<span class='material-symbols-outlined'>thunderstorm</span>";
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return "<span class='material-symbols-outlined'>ac_unit</span>";
   return "🌡️";
 }
 
@@ -136,13 +170,13 @@ function renderNextDays(data) {
     el.className = "wx-day";
     el.innerHTML = `
       <div class="wx-when">${label}</div>
-      <div class="wx-ico">${wxIcon(code)}</div>
       <div class="wx-minmax">${min}° / ${max}°</div>
-      <div class="wx-rain">${typeof rain === "number" ? rain + "%" : "—"}</div>
+      <div class="wx-ico"> <small class="muted" id="rain-forecast">${typeof rain === "number" ? rain + "%" : "—"}</small> ${wxIcon(code)}</div>
     `;
     container.appendChild(el);
   }
 }
+// <div class="wx-rain">${typeof rain === "number" ? rain + "%" : "—"}</div>
 
 function renderWeatherCard(data) {
   const now = data.current_weather || {};
