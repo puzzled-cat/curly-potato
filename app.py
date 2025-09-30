@@ -20,6 +20,38 @@ feeding = {t: False for t in FEED_TIMES}
 alerts_sent = {t: False for t in FEED_TIMES}
 last_alert_at = {t: None for t in FEED_TIMES}
 
+# --- Lists persistence (shopping / todos) ---
+LISTS_FILE = "lists.json"
+lists = {}  # in-memory {name: {title, items[], updated_at}}
+
+def now_iso():
+    return datetime.utcnow().isoformat(timespec="seconds") + "Z"
+
+def save_lists():
+    data = {"lists": lists}
+    tmp = LISTS_FILE + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f)
+    os.replace(tmp, LISTS_FILE)
+
+def load_lists():
+    global lists
+    if os.path.exists(LISTS_FILE):
+        try:
+            with open(LISTS_FILE, "r") as f:
+                data = json.load(f)
+            lists = data.get("lists", {})
+            print(f"[LISTS] Loaded {LISTS_FILE}")
+        except Exception as e:
+            print(f"[LISTS] Failed to load: {e}")
+            lists = {}
+    # ensure two defaults exist
+    for name, title in (("shopping", "Shopping"), ("todo", "To-Dos")):
+        lists.setdefault(name, {"title": title, "items": [], "updated_at": now_iso()})
+
+def ensure_list(name: str):
+    if name not in lists:
+        lists[name] = {"title": name.title(), "items": [], "updated_at": now_iso()}
 
 # --- Helper to log events for Discord bot ---
 def write_alert(line: str):
@@ -124,6 +156,71 @@ def check_feeding_times():
                 pass
 
         time.sleep(60)
+        
+        # ---------- Lists API ----------
+@app.get("/api/lists")
+def api_lists():
+    return jsonify({"lists": list(lists.keys())})
+
+@app.get("/api/lists/<name>")
+def api_list_get(name):
+    ensure_list(name)
+    return jsonify(lists[name])
+
+@app.post("/api/lists/<name>/items")
+def api_item_add(name):
+    payload = request.get_json() or {}
+    text = (payload.get("text") or "").strip()
+    if not text:
+        return jsonify({"error": "text required"}), 400
+    ensure_list(name)
+    item_id = f"it_{int(time.time()*1000)}"
+    lists[name]["items"].append({
+        "id": item_id, "text": text, "done": False, "ts": now_iso()
+    })
+    lists[name]["updated_at"] = now_iso()
+    save_lists()
+    return jsonify({"ok": True, "id": item_id})
+
+@app.patch("/api/lists/<name>/items/<item_id>")
+def api_item_patch(name, item_id):
+    ensure_list(name)
+    items = lists[name]["items"]
+    for it in items:
+        if it["id"] == item_id:
+            payload = request.get_json() or {}
+            if "text" in payload:
+                it["text"] = (payload["text"] or "").strip()
+            if "done" in payload:
+                it["done"] = bool(payload["done"])
+            it["ts"] = now_iso()
+            lists[name]["updated_at"] = now_iso()
+            save_lists()
+            return jsonify({"ok": True})
+    return jsonify({"error": "not found"}), 404
+
+@app.delete("/api/lists/<name>/items/<item_id>")
+def api_item_delete(name, item_id):
+    ensure_list(name)
+    items = lists[name]["items"]
+    new_items = [it for it in items if it["id"] != item_id]
+    if len(new_items) == len(items):
+        return jsonify({"error": "not found"}), 404
+    lists[name]["items"] = new_items
+    lists[name]["updated_at"] = now_iso()
+    save_lists()
+    return jsonify({"ok": True})
+
+@app.post("/api/lists/<name>/clear_done")
+def api_clear_done(name):
+    ensure_list(name)
+    items = lists[name]["items"]
+    lists[name]["items"] = [it for it in items if not it["done"]]
+    lists[name]["updated_at"] = now_iso()
+    save_lists()
+    return jsonify({"ok": True})
+# ---------- end Lists API ----------
+
 
 # --- Start background scheduler thread only once ---
 def start_scheduler_once():
@@ -135,6 +232,7 @@ def start_scheduler_once():
 
 if __name__ == "__main__":
     load_state()
+    load_lists()
     # Only start thread in the main process (avoids duplicate alerts in debug)
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
         start_scheduler_once()

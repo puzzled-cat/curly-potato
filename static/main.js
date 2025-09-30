@@ -178,6 +178,89 @@ function renderNextDays(data) {
 }
 // <div class="wx-rain">${typeof rain === "number" ? rain + "%" : "—"}</div>
 
+async function loadLists() {
+  const res = await fetch('/api/lists');
+  const data = await res.json();
+  const select = document.getElementById('listSelect');
+  select.innerHTML = '';
+  data.lists.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    select.appendChild(opt);
+  });
+  if (data.lists.length > 0) {
+    renderList(select.value);
+  }
+}
+
+async function renderList(name) {
+  const res = await fetch(`/api/lists/${name}`);
+  const data = await res.json();
+  const listEl = document.getElementById('listItems');
+  listEl.innerHTML = '';
+
+  data.items.forEach(item => {
+    const li = document.createElement('li');
+    if (item.done) li.classList.add('done');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = item.done;
+    checkbox.addEventListener('change', async () => {
+      await fetch(`/api/lists/${name}/items/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ done: checkbox.checked })
+      });
+      renderList(name);
+    });
+
+    const text = document.createElement('span');
+    text.textContent = item.text;
+
+    const del = document.createElement('button');
+    del.innerHTML = '✖';
+    del.addEventListener('click', async () => {
+      await fetch(`/api/lists/${name}/items/${item.id}`, { method: 'DELETE' });
+      renderList(name);
+    });
+
+    li.appendChild(checkbox);
+    li.appendChild(text);
+    li.appendChild(del);
+    listEl.appendChild(li);
+  });
+}
+
+document.getElementById('listSelect').addEventListener('change', (e) => {
+  renderList(e.target.value);
+});
+
+document.getElementById('addItemBtn').addEventListener('click', async () => {
+  const name = document.getElementById('listSelect').value;
+  const textEl = document.getElementById('newItemText');
+  const text = textEl.value.trim();
+  if (!text) return;
+  await fetch(`/api/lists/${name}/items`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+  textEl.value = '';
+  renderList(name);
+});
+
+document.getElementById('clearDoneBtn').addEventListener('click', async () => {
+  const name = document.getElementById('listSelect').value;
+  await fetch(`/api/lists/${name}/clear_done`, { method: 'POST' });
+  renderList(name);
+});
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', loadLists);
+
+
 function renderWeatherCard(data) {
   const now = data.current_weather || {};
   const tempC = typeof now.temperature === "number" ? Math.round(now.temperature) : null;
