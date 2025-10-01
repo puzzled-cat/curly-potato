@@ -372,8 +372,57 @@ function initPouchesChips() {
 
 document.addEventListener("DOMContentLoaded", initPouchesChips);
 
+function initSSE() {
+  const es = new EventSource("/events");
+
+  es.addEventListener("pouches:update", (e) => {
+    const data = JSON.parse(e.data);
+    const el = document.getElementById("pouchesValue");
+    if (el && typeof data.pouches_left === "number") {
+      el.textContent = data.pouches_left;
+    }
+  });
+
+  es.addEventListener("feeding:update", (e) => {
+    const data = JSON.parse(e.data); // { feeding: {...} }
+    if (data && data.feeding) {
+      renderFeeding(data.feeding);
+      updateStatusLabels(data.feeding);
+    }
+  });
+
+  // helper: which list is currently selected in your UI
+  function currentListName() {
+    const sel = document.getElementById("listSelect");
+    return sel ? (sel.value || sel.dataset.default || "todo") : "todo";
+  }
+
+  // helper: re-fetch and render the given list (you already have something like this)
+  async function refreshList(name) {
+    const res = await fetch(`/api/lists/${encodeURIComponent(name)}`);
+    const data = await res.json();
+    renderList(name, data); // <- your existing renderer
+  }
+
+  es.addEventListener("lists:update", (e) => {
+    const { name } = JSON.parse(e.data);
+    if (name === currentListName()) {
+      clearTimeout(window.__listDeb);
+      window.__listDeb = setTimeout(() => renderList(name), 120);
+    }
+  });
+
+  es.addEventListener("heartbeat", () => {
+    // optional: set a "connected" indicator
+  });
+
+  es.onerror = () => {
+    // optional: show "disconnected" badge; EventSource auto-reconnects
+  };
+}
 
 async function init() {
+  initSSE();
   const initialState = await fetchFeeding();
   renderFeeding(initialState);
   updateStatusLabels(initialState);

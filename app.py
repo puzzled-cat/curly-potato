@@ -5,6 +5,10 @@ import time
 import os
 import json
 import requests
+from flask import Response, stream_with_context
+from queue import Queue, Empty
+import time
+
 
 app = Flask(__name__)
 
@@ -25,6 +29,50 @@ lists = {}  # in-memory {name: {title, items[], updated_at}}
 
 TODO_LIST_NAME = "shopping"      # name of the list to use
 TODO_ITEM_TEXT = "Buy cat food"  # text of the reminder item
+
+# --- SSE hub ---
+_sse_subs = set()
+
+def sse_publish(event: str, data: dict):
+    """Fan out an event to all subscribers."""
+    payload = json.dumps(data)
+    dead = []
+    for q in list(_sse_subs):
+        try:
+            q.put_nowait((event, payload))
+        except Exception:
+            dead.append(q)
+    for q in dead:
+        _sse_subs.discard(q)
+
+@app.get("/events")
+def sse_events():
+    """SSE stream endpoint."""
+    q = Queue()
+    _sse_subs.add(q)
+
+    def gen():
+        # suggest client retry after network drop
+        yield "retry: 10000\n\n"
+        while True:
+            try:
+                event, payload = q.get(timeout=30)   # heartbeat every 30s if quiet
+                yield f"event: {event}\n"
+                yield f"data: {payload}\n\n"
+            except Empty:
+                hb = json.dumps({"t": int(time.time())})
+                yield "event: heartbeat\n"
+                yield f"data: {hb}\n\n"
+
+    resp = Response(stream_with_context(gen()), mimetype="text/event-stream")
+    # keep proxies from buffering
+    resp.headers["Cache-Control"] = "no-cache"
+    resp.headers["X-Accel-Buffering"] = "no"  # nginx
+    @resp.call_on_close
+    def _cleanup():
+        _sse_subs.discard(q)
+    return resp
+
 def remove_catfood_todo():
     """
     Remove 'Buy cat food' from the list if it exists.
@@ -150,6 +198,9 @@ def add_pouches(amount: int) -> int:
         food["pouches_left"] = int(new_total)
         food["updated_at"] = food_now_iso()
         save_food()
+        # inside add_pouches(...) after save_food()
+        sse_publish("pouches:update", {"pouches_left": food["pouches_left"], "updated_at": food["updated_at"]})
+
 
     # --- List integration ---
     if new_total <= 3:
@@ -178,6 +229,8 @@ def set_pouches(total: int) -> int:
         food["pouches_left"] = n
         food["updated_at"] = food_now_iso()
         save_food()
+        # inside set_pouches(...) after save_food()
+        sse_publish("pouches:update", {"pouches_left": food["pouches_left"], "updated_at": food["updated_at"]})
 
     # --- List integration ---
     if n <= 3:
@@ -311,6 +364,8 @@ def set_feeding():
             write_alert(f"UNSET {time_str} at {now_str} (via panel)")
 
         save_state()
+        # in set_feeding() after save_state()
+        sse_publish("feeding:update", {"feeding": feeding})
 
     return jsonify(feeding)
 
@@ -377,6 +432,7 @@ def api_item_add(name):
     })
     lists[name]["updated_at"] = now_iso()
     save_lists()
+    sse_publish("lists:update", {"name": name, "ts": time.time()})
     return jsonify({"ok": True, "id": item_id})
 
 @app.patch("/api/lists/<name>/items/<item_id>")
@@ -393,6 +449,7 @@ def api_item_patch(name, item_id):
             it["ts"] = now_iso()
             lists[name]["updated_at"] = now_iso()
             save_lists()
+            sse_publish("lists:update", {"name": name, "ts": time.time()})
             return jsonify({"ok": True})
     return jsonify({"error": "not found"}), 404
 
@@ -406,6 +463,8 @@ def api_item_delete(name, item_id):
     lists[name]["items"] = new_items
     lists[name]["updated_at"] = now_iso()
     save_lists()
+    sse_publish("lists:update", {"name": name, "ts": time.time()})
+
     return jsonify({"ok": True})
 
 @app.post("/api/lists/<name>/clear_done")
@@ -415,6 +474,7 @@ def api_clear_done(name):
     lists[name]["items"] = [it for it in items if not it["done"]]
     lists[name]["updated_at"] = now_iso()
     save_lists()
+    sse_publish("lists:update", {"name": name, "ts": time.time()})
     return jsonify({"ok": True})
 # ---------- end Lists API ----------
 
