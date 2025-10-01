@@ -4,6 +4,7 @@ import threading
 import time
 import os
 import json
+import requests
 
 app = Flask(__name__)
 
@@ -22,8 +23,171 @@ last_alert_at = {t: None for t in FEED_TIMES}
 LISTS_FILE = "lists.json"
 lists = {}  # in-memory {name: {title, items[], updated_at}}
 
+TODO_LIST_NAME = "shopping"      # name of the list to use
+TODO_ITEM_TEXT = "Buy cat food"  # text of the reminder item
+def remove_catfood_todo():
+    """
+    Remove 'Buy cat food' from the list if it exists.
+    """
+    try:
+        r = requests.get(f"http://127.0.0.1:5000/api/lists/{TODO_LIST_NAME}", timeout=3)
+        if r.status_code != 200:
+            print(f"[TODO] Couldn't fetch list {TODO_LIST_NAME}: {r.text}")
+            return
+        data = r.json()
+        items = data.get("items", [])
+
+        # find matching items
+        matches = [it for it in items if TODO_ITEM_TEXT.lower() in it.get("text", "").lower()]
+        for it in matches:
+            item_id = it.get("id")
+            if not item_id:
+                continue
+            dr = requests.delete(
+                f"http://127.0.0.1:5000/api/lists/{TODO_LIST_NAME}/items/{item_id}",
+                timeout=3
+            )
+            if dr.status_code == 200:
+                print(f"[TODO] Removed '{TODO_ITEM_TEXT}' from {TODO_LIST_NAME}")
+            else:
+                print(f"[TODO] Failed to remove todo {item_id}: {dr.text}")
+    except Exception as e:
+        print(f"[TODO] Exception while removing cat food todo: {e}")
+
+
+def ensure_catfood_todo():
+    """
+    If pouch count is low, ensure 'Buy cat food' exists in the todo list.
+    If lists API not set up yet, just log and return gracefully.
+    """
+    try:
+        # Fetch the list first
+        r = requests.get(f"http://127.0.0.1:5000/api/lists/{TODO_LIST_NAME}", timeout=3)
+        if r.status_code != 200:
+            print(f"[TODO] Couldn't fetch list {TODO_LIST_NAME}: {r.text}")
+            return
+        data = r.json()
+        items = data.get("items", [])
+
+        # Check if the item already exists
+        exists = any(
+            TODO_ITEM_TEXT.lower() in it.get("text", "").lower() for it in items
+        )
+        if exists:
+            return
+
+        # Otherwise, add it
+        r2 = requests.post(
+            f"http://127.0.0.1:5000/api/lists/{TODO_LIST_NAME}/items",
+            json={"text": TODO_ITEM_TEXT},
+            timeout=3
+        )
+        if r2.status_code == 200:
+            print(f"[TODO] Added '{TODO_ITEM_TEXT}' to {TODO_LIST_NAME}")
+        else:
+            print(f"[TODO] Failed to add todo: {r2.text}")
+    except Exception as e:
+        print(f"[TODO] Exception while ensuring cat food todo: {e}")
+
 def now_iso():
     return datetime.utcnow().isoformat(timespec="seconds") + "Z"
+
+# --- Pouches (cat food) persistence ---
+FOOD_FILE = os.path.join("data", "food.json")
+_food_lock = threading.RLock()
+food = {"pouches_left": 0, "updated_at": None}
+
+def food_now_iso():
+    return datetime.now().isoformat(timespec="seconds")
+
+def _food_atomic_write(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f)
+    os.replace(tmp, path)
+
+def save_food():
+    with _food_lock:
+        _food_atomic_write(FOOD_FILE, food.copy())
+
+def load_food():
+    """Load food count from disk; if missing, start from 0."""
+    if os.path.exists(FOOD_FILE):
+        try:
+            with open(FOOD_FILE, "r") as f:
+                data = json.load(f)
+            # tolerate legacy/partial data
+            food["pouches_left"] = int(data.get("pouches_left", 0))
+            food["updated_at"] = data.get("updated_at") or food_now_iso()
+            print(f"[FOOD] Loaded {FOOD_FILE}: {food['pouches_left']}")
+        except Exception as e:
+            print(f"[FOOD] Failed to load: {e}; defaulting to 0")
+            food["pouches_left"] = 0
+            food["updated_at"] = food_now_iso()
+    else:
+        food["pouches_left"] = 0
+        food["updated_at"] = food_now_iso()
+        save_food()
+
+def add_pouches(amount: int) -> int:
+    """
+    Add (or subtract) pouches. Negative allowed for 'undo'.
+    Floor at 0. Returns new total.
+    """
+    with _food_lock:
+        try:
+            amt = int(amount)
+        except Exception:
+            amt = 0
+        # clamp a single operation to |99| to match UI intent
+        if amt > 99:
+            amt = 99
+        if amt < -99:
+            amt = -99
+
+        new_total = max(0, int(food["pouches_left"]) + amt)
+        food["pouches_left"] = int(new_total)
+        food["updated_at"] = food_now_iso()
+        save_food()
+
+    # --- List integration ---
+    if new_total <= 3:
+        ensure_catfood_todo()
+    else:
+        remove_catfood_todo()
+
+    # optional: log to your alerts file for Discord if you want a trail
+    try:
+        delta = f"+{amt}" if amt >= 0 else str(amt)
+        write_alert(f"FOOD {delta} => {new_total} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    except Exception:
+        pass
+
+    return new_total
+
+
+def set_pouches(total: int) -> int:
+    """Directly set the total (server-side safeguard)."""
+    with _food_lock:
+        try:
+            n = int(total)
+        except Exception:
+            n = 0
+        n = max(0, min(n, 9999))  # hard upper bound to protect layout
+        food["pouches_left"] = n
+        food["updated_at"] = food_now_iso()
+        save_food()
+
+    # --- List integration ---
+    if n <= 3:
+        ensure_catfood_todo()
+    else:
+        remove_catfood_todo()
+
+    return n
+
+
 
 def save_lists():
     data = {"lists": lists}
@@ -84,6 +248,42 @@ def load_state():
 @app.route("/")
 def index():
     return render_template("index.html", feed_times=FEED_TIMES)
+# ---------- Pouches API ----------
+@app.get("/api/food")
+def api_food_get():
+    with _food_lock:
+        return jsonify({
+            "pouches_left": int(food.get("pouches_left", 0)),
+            "updated_at": food.get("updated_at")
+        })
+
+@app.post("/api/food/add")
+def api_food_add():
+    data = request.get_json() or {}
+    amount = data.get("amount")
+    try:
+        amount = int(amount)
+    except Exception:
+        return jsonify({"error": "amount must be an integer"}), 400
+    if amount == 0:
+        return jsonify({"error": "amount cannot be 0"}), 400
+
+    new_total = add_pouches(amount)
+    return jsonify({"pouches_left": new_total})
+
+# (Optional) direct setter used for admin/reset or if you prefer undo via /set
+@app.post("/api/food/set")
+def api_food_set():
+    data = request.get_json() or {}
+    total = data.get("total")
+    try:
+        total = int(total)
+    except Exception:
+        return jsonify({"error": "total must be an integer"}), 400
+    new_total = set_pouches(total)
+    return jsonify({"pouches_left": new_total})
+# ---------- end Pouches API ----------
+
 
 @app.get("/api/feeding")
 def get_feeding():
@@ -228,6 +428,7 @@ def start_scheduler_once():
 if __name__ == "__main__":
     load_state()
     load_lists()
+    load_food()
     # Only start thread in the main process (avoids duplicate alerts in debug)
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
         start_scheduler_once()

@@ -177,6 +177,35 @@ async def list_clear_done(inter: discord.Interaction, name: str):
         await inter.response.send_message(f"🧹 Cleared completed in **{name_n}**", ephemeral=False)
     except Exception as e:
         await inter.response.send_message(f"❌ {e}", ephemeral=True)
+        
+        # --- Slash commands group ---
+@tree.command(name="pouches_add", description="Add pouches (management/debug)")
+@app_commands.describe(amount="Number of pouches to add")
+async def pouches_add(inter: discord.Interaction, amount: int):
+    """POST /api/food/add {amount}"""
+    try:
+        data = await api_json("POST", "/api/food/add", {"amount": amount})
+        total = data.get("pouches_left", "unknown")
+        await inter.response.send_message(
+            f"✅ Added **+{amount}** pouches. New total: **{total}**",
+            ephemeral=False
+        )
+    except Exception as e:
+        await inter.response.send_message(f"❌ Failed to add pouches: {e}", ephemeral=True)
+
+@tree.command(name="pouches_set", description="Set pouch total directly (management/debug)")
+@app_commands.describe(total="New total number of pouches")
+async def pouches_set(inter: discord.Interaction, total: int):
+    """POST /api/food/set {total}"""
+    try:
+        data = await api_json("POST", "/api/food/set", {"total": total})
+        new_total = data.get("pouches_left", "unknown")
+        await inter.response.send_message(
+            f"📝 Set pouch total to **{new_total}**",
+            ephemeral=False
+        )
+    except Exception as e:
+        await inter.response.send_message(f"❌ Failed to set total: {e}", ephemeral=True)
 
 # -------- run --------
 if __name__ == "__main__":

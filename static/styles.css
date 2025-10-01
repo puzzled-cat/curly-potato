@@ -332,7 +332,7 @@ body {
   font-size: 0.9rem;
 }
 
-.list-add {
+.list-adds {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
@@ -412,4 +412,140 @@ body {
 .wx-day .wx-rain {
   color: #a8b0c0;
   font-size: .95rem;
+}
+
+.cat-food-tracker {
+  display: grid;
+  grid-template-columns: auto auto;
+  /* input | button on the second row */
+  grid-template-rows: auto auto;
+  /* labels on top, controls below */
+  gap: var(--space-1);
+  align-items: center;
+  margin-top: var(--space-1);
+}
+
+.cat-food-tracker .muted {
+  grid-column: 1 / -1;
+  /* labels span both columns */
+}
+
+.cat-food-tracker input[type="number"] {
+  width: 60px;
+  /* small numeric box */
+  background: #121722;
+  color: #e6e6e6;
+  border: 1px solid #232838;
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: var(--fs-base);
+  text-align: center;
+}
+
+.cat-food-tracker input[type="number"]:focus {
+  outline: 2px solid #2a6af3;
+  border-color: #2a6af3;
+}
+
+/* Remove number spinners */
+.cat-food-tracker input[type="number"]::-webkit-outer-spin-button,
+.cat-food-tracker input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.cat-food-tracker input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.cat-food-tracker #addFoodBtn.btn {
+  background: #121722;
+  /* same as input background */
+  color: #e6e6e6;
+  /* light text */
+  border: 1px solid #232838;
+  /* same border as input */
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: var(--fs-sm);
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.cat-food-tracker #addFoodBtn.btn:hover {
+  background: #1c2230;
+  /* slightly lighter on hover */
+  border-color: #2a6af3;
+  /* match your theme blue */
+}
+
+.cat-food-tracker #addFoodBtn.btn:active {
+  background: #2a6af3;
+  /* active = highlight */
+  border-color: #2a6af3;
+  color: white;
+}
+
+.cat-food-tracker #addFoodBtn.btn:focus {
+  outline: 2px solid #2a6af3;
+  /* same focus ring as input */
+  outline-offset: 0;
+}
+
+.pouches {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  flex-wrap: nowrap;
+  /* prevent wrapping on narrow screens */
+}
+
+.pouches-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pouches-label {
+  font-size: var(--fs-base);
+  color: #a8b0c0;
+  line-height: 1;
+  /* normalize vertical alignment */
+}
+
+.pouches-value {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: #e6e6e6;
+  line-height: 1;
+}
+
+.pouches-chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pouches-chips .chip {
+  background: #121722;
+  color: #e6e6e6;
+  border: 1px solid #232838;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+
+.pouches-chips .chip:hover,
+.pouches-chips .chip:focus {
+  background: #1c2230;
+  border-color: #2a6af3;
+  outline: none;
 }

@@ -323,6 +323,56 @@ function setStatus(text) {
   document.getElementById("statusText").textContent = text;
 }
 
+async function apiGetFood() {
+  const r = await fetch("/api/food");
+  if (!r.ok) throw new Error("food get failed");
+  return r.json(); // { pouches_left: n }
+}
+
+async function apiAddFood(amount) {
+  const r = await fetch("/api/food/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount })
+  });
+  if (!r.ok) throw new Error("food add failed");
+  return r.json();
+}
+
+function initPouchesChips() {
+  const valEl = document.getElementById("pouchesValue");
+
+  async function refresh() {
+    try {
+      const data = await apiGetFood();
+      valEl.textContent = data.pouches_left;
+    } catch {
+      valEl.textContent = "—";
+    }
+  }
+
+  async function add(amount) {
+    try {
+      const data = await apiAddFood(amount);
+      valEl.textContent = data.pouches_left;
+    } catch {
+      console.error("Add pouches failed");
+    }
+  }
+
+  document.querySelectorAll(".pouches-chips .chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const amount = parseInt(chip.dataset.add, 10);
+      add(amount);
+    });
+  });
+
+  refresh();
+}
+
+document.addEventListener("DOMContentLoaded", initPouchesChips);
+
+
 async function init() {
   const initialState = await fetchFeeding();
   renderFeeding(initialState);

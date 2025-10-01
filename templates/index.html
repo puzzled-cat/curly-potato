@@ -22,7 +22,7 @@
 
   <!-- Tabs -->
   <nav class="tabs" role="tablist" aria-label="Panels">
-    <button class="tab" role="tab" data-target="card-feed" aria-selected="true">Home</button>
+    <button class="tab" role="tab" data-target="card-feed" aria-selected="true">Cat Dashboard</button>
     <button class="tab" role="tab" data-target="card-logs">Weather</button>
     <button class="tab" role="tab" data-target="card-settings">Lists and Reminders</button>
   </nav>
@@ -44,6 +44,18 @@
         </div>
         {% endfor %}
       </div>
+      <div class="pouches card-line">
+        <div class="pouches-left">
+          <span class="pouches-label">Pouches left:</span>
+          <span class="pouches-value" id="pouchesValue">—</span>
+        </div>
+
+        <div class="pouches-chips">
+          <button class="chip" data-add="6">+6</button>
+          <button class="chip" data-add="12">+12</button>
+        </div>
+      </div>
+
       <br>
       <hr>
       <small class="muted" id="catFactBox">-</small>
