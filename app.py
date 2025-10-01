@@ -357,6 +357,11 @@ def set_feeding():
             alerts_sent[time_str] = True
             last_alert_at[time_str] = None
             write_alert(f"FED {time_str} at {now_str} (via panel)")
+            
+            try:
+                add_pouches(-2)
+            except Exception as e:
+                print(f"[POUCHES] Auto-subtract failed: {e}")
         else:
             # Re-open the slot; allow future prompts
             alerts_sent[time_str] = False
