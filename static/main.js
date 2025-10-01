@@ -109,7 +109,10 @@ renderToolbarIcons();
 setInterval(renderToolbarIcons, 60 * 60 * 1000); // hourly check
 
 // Belfast coords TODO: make configurable
-const LAT_BFS = 54.5973, LON_BFS = -5.9301;
+const LAT_BFS = 54.58314393020901, LON_BFS = -5.898022460442155;
+
+// const LAT_BFS = 54.5973, LON_BFS = -5.9301;
+
 const WX_REFRESH_MS = 10 * 60 * 1000;
 
 function isoHourLocal(d = new Date()) {
