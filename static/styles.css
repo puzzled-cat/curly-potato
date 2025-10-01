@@ -513,7 +513,7 @@ body {
 }
 
 .pouches-label {
-  font-size: var(--fs-base);
+  font-size: var(--fs-lg);
   color: #a8b0c0;
   line-height: 1;
   /* normalize vertical alignment */
@@ -538,9 +538,10 @@ body {
   border: 1px solid #232838;
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-lg);
   cursor: pointer;
   transition: background .2s, border-color .2s;
+  text-align: center;
 }
 
 .pouches-chips .chip:hover,
