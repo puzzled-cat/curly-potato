@@ -33,12 +33,12 @@ function renderFeeding(feedMap) {
   });
 }
 
-async function getCatFact() {
-  const res = await fetch("https://catfact.ninja/fact");
-  if (!res.ok) throw new Error("Failed to fetch cat fact");
-  const data = await res.json();
-  return data.fact;
-}
+// async function getCatFact() {
+//   const res = await fetch("https://catfact.ninja/fact");
+//   if (!res.ok) throw new Error("Failed to fetch cat fact");
+//   const data = await res.json();
+//   return data.fact;
+// }
 
 function loadCatAvatars() {
   document.querySelectorAll('.cat-avatar').forEach(img => {
@@ -53,18 +53,18 @@ document.addEventListener('click', (e) => {
 });
 
 
-async function displayCatFact() {
-  try {
-    const fact = await getCatFact();
-    document.getElementById("catFactBox").textContent = fact;
-  } catch (err) {
-    console.error(err);
-    document.getElementById("catFactBox").textContent = "Couldn't fetch a cat fact";
-  }
-}
+// async function displayCatFact() {
+//   try {
+//     const fact = await getCatFact();
+//     document.getElementById("catFactBox").textContent = fact;
+//   } catch (err) {
+//     console.error(err);
+//     document.getElementById("catFactBox").textContent = "Couldn't fetch a cat fact";
+//   }
+// }
 
-displayCatFact();
-setInterval(displayCatFact, 5 * 60 * 1000);
+// displayCatFact();
+// setInterval(displayCatFact, 5 * 60 * 1000);
 
 function updateStatusLabels(feedMap) {
   document.querySelectorAll('.feed-status').forEach(span => {
@@ -420,6 +420,92 @@ function initSSE() {
     // optional: show "disconnected" badge; EventSource auto-reconnects
   };
 }
+
+// ---- Cat facts cache with hourly prefetch ----
+const CATFACT_URL = "https://catfact.ninja/facts"; // batch endpoint
+const FACT_INTERVAL_MS = 5 * 60 * 1000;            // how often you rotate
+const FACTS_PER_HOUR = Math.ceil(60 * 60 * 1000 / FACT_INTERVAL_MS); // e.g., 12
+const PREFETCH_SIZE = Math.max(FACTS_PER_HOUR, 20); // fetch at least a good chunk
+const REFILL_THRESHOLD = Math.floor(PREFETCH_SIZE / 3); // when cache drops below this, refill
+
+let catFacts = [];
+let factIdx = 0;
+let factTimer = null;
+
+async function fetchFactsBatch(limit = PREFETCH_SIZE) {
+  try {
+    const res = await fetch(`${CATFACT_URL}?limit=${limit}`);
+    if (!res.ok) throw new Error("cat facts fetch failed");
+    const data = await res.json();
+    console.log("[CatFacts] Fetched", (data.data || []).length, "facts");
+    // API returns { data: [{fact, length}, ...], ... }
+    const facts = (data.data || [])
+      .map(x => (x.fact || "").trim())
+      .filter(Boolean);
+    return facts;
+  } catch (e) {
+    console.error("[CatFacts] Fetch error:", e);
+    return [];
+  }
+}
+
+function displayCatFact(text) {
+  const el = document.getElementById("catFactBox");
+  if (el) el.textContent = text || "—";
+}
+
+async function ensureFacts() {
+  // if we're low, top up
+  if (catFacts.length - factIdx <= REFILL_THRESHOLD) {
+    const fresh = await fetchFactsBatch(PREFETCH_SIZE);
+    if (fresh.length) {
+      // Append new facts; also de-dup quick & dirty
+      const seen = new Set(catFacts.slice(factIdx)); // only keep unseen window
+      fresh.forEach(f => { if (!seen.has(f)) catFacts.push(f); });
+      // Optional: cap growth
+      const windowFacts = catFacts.slice(factIdx);
+      if (windowFacts.length > PREFETCH_SIZE * 3) {
+        // drop older consumed facts
+        catFacts = windowFacts;
+        factIdx = 0;
+      }
+    }
+  }
+}
+
+async function nextCatFact() {
+  if (factIdx >= catFacts.length) {
+    // empty or exhausted, force fetch
+    const fresh = await fetchFactsBatch(PREFETCH_SIZE);
+    catFacts = fresh;
+    factIdx = 0;
+  }
+  const fact = catFacts[factIdx] || "Cats are cute. (No facts available right now.)";
+  factIdx += 1;
+  displayCatFact(fact);
+  // kick off a background refill if we’re getting low
+  ensureFacts();
+}
+
+function startCatFacts(intervalMs = FACT_INTERVAL_MS) {
+  // initial prefetch then start rotation
+  (async () => {
+    const fresh = await fetchFactsBatch(PREFETCH_SIZE);
+    if (fresh.length) {
+      catFacts = fresh;
+      factIdx = 0;
+    }
+    await nextCatFact(); // show first immediately
+    if (factTimer) clearInterval(factTimer);
+    factTimer = setInterval(nextCatFact, intervalMs);
+  })();
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  startCatFacts(FACT_INTERVAL_MS);
+});
+
 
 async function init() {
   initSSE();
