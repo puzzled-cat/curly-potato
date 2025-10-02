@@ -38,7 +38,7 @@ async def check_alerts():
     if CHANNEL_ID == 0:
         return
     try:
-        with open("alerts.log", "r") as f:
+        with open("data/alerts.log", "r") as f:
             lines = [ln.strip() for ln in f if ln.strip()]
         if not lines:
             return
@@ -64,7 +64,7 @@ async def check_alerts():
             await channel.send(msg)
 
         # clear file after sending
-        open("alerts.log", "w").close()
+        open("data/alerts.log", "w").close()
     except FileNotFoundError:
         pass
 

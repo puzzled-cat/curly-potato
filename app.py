@@ -13,7 +13,7 @@ import time
 app = Flask(__name__)
 
 REMIND_EVERY_MIN = 30
-STATE_FILE = "state.json"
+STATE_FILE = os.path.join("data", "state.json")
 FEED_TIMES = ["09:00", "12:00", "17:00"]
 
 # Track whether each slot has been fed
@@ -24,7 +24,7 @@ alerts_sent = {t: False for t in FEED_TIMES}
 last_alert_at = {t: None for t in FEED_TIMES}
 
 # --- Lists persistence (shopping / todos) ---
-LISTS_FILE = "lists.json"
+LISTS_FILE = os.path.join("data", "lists.json")
 lists = {}  # in-memory {name: {title, items[], updated_at}}
 
 TODO_LIST_NAME = "shopping"      # name of the list to use
@@ -272,7 +272,7 @@ def ensure_list(name: str):
 def write_alert(line: str):
     """Append a single alert/event line to alerts.log for the Discord bot to pick up."""
     line = line.rstrip()
-    with open("alerts.log", "a") as f:
+    with open("data/alerts.log", "a") as f:
         f.write(line + "\n")
     print(f"[ALERT LOGGED] {line}")
    
