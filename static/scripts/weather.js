@@ -59,11 +59,23 @@ export function renderNextDays(data) {
     }
 }
 
+function publishToday({ code, iconHTML }) {
+    try {
+        localStorage.setItem("wx_today_code", String(code));
+        localStorage.setItem("wx_today_icon", iconHTML || "");
+    } catch { }
+    window.dispatchEvent(new CustomEvent("weather:update", { detail: { code, iconHTML } }));
+}
+
+function todayWeatherCode(daily) {
+    // Open-Meteo puts today at index 0
+    return Array.isArray(daily?.weathercode) ? daily.weathercode[0] : null;
+}
+
 export function renderWeatherCard(data) {
     const now = data.current_weather || {};
     const tempC = typeof now.temperature === "number" ? Math.round(now.temperature) : null;
-
-    renderNextDays(data);
+    const current_code = typeof now.weathercode === "number" ? now.weathercode : null;
 
     // wind speed m/s -> mph
     const windMps = typeof now.windspeed === "number" ? now.windspeed : null;
@@ -90,6 +102,7 @@ export function renderWeatherCard(data) {
     set("wx-wind", windMph != null ? `${windMph} mph` : "—");
     set("wx-range", (tMin != null && tMax != null) ? `${Math.round(tMin)}° / ${Math.round(tMax)}°` : "—");
     set("wx-updated", `Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    return current_code != null ? wxIcon(current_code) : "🌡️";
 }
 
 /**
@@ -111,7 +124,10 @@ export function initWeather({
         try {
             // If your fetcher ignores lat/lon, that's fine; otherwise pass them in
             const data = await fetcher(lat, lon);
+            const iconHTML = renderWeatherCard(data);            // 👈 get icon markup from renderer
             renderWeatherCard(data);
+            const code = Array.isArray(data?.daily?.weathercode) ? data.daily.weathercode[0] : null;
+            publishToday({ code, iconHTML });
         } catch (e) {
             console.error("[Weather] fetch failed:", e);
             const el = document.getElementById("wx-updated");

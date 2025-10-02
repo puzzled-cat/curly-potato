@@ -47,20 +47,38 @@ function updateClock() {
   if (el) el.textContent = `${dateStr} ${timeStr}`;
 }
 
-function renderToolbarIcons() {
-  const iconsBox = document.getElementById("toolbarIcons");
-  if (!iconsBox) return;
-  iconsBox.innerHTML = "";
+function renderToolbarIcons({ iconHTML = null } = {}) {
+  const box = document.getElementById("toolbarIcons");
+  if (!box) return;
+  box.innerHTML = "";
 
-  const today = new Date().getDay();
-  if (today === 3) { // Wednesday — bin day
-    const binIcon = document.createElement("span");
-    binIcon.className = "icon material-symbols-outlined";
-    binIcon.textContent = "delete";
-    binIcon.title = "Bin day!";
-    iconsBox.appendChild(binIcon);
+  // bin-day (Wednesday)
+  if (new Date().getDay() === 3) {
+    const bin = document.createElement("span");
+    bin.className = "icon material-symbols-outlined";
+    bin.textContent = "delete";
+    bin.title = "Bin day!";
+    box.appendChild(bin);
+  }
+
+  // weather icon from weather.js (already-built HTML)
+  if (iconHTML) {
+    const wrap = document.createElement("span");
+    wrap.className = "icon";
+    wrap.innerHTML = iconHTML;   // safe because the string is produced locally by your code
+    box.appendChild(wrap);
   }
 }
+
+// subscribe to weather updates
+window.addEventListener("weather:update", (e) => {
+  const { iconHTML } = e.detail || {};
+  renderToolbarIcons({ iconHTML });
+});
+
+// first paint: use cached icon (if present)
+const cachedIcon = localStorage.getItem("wx_today_icon");
+renderToolbarIcons({ iconHTML: cachedIcon });
 
 // -----------------------------
 // Tabs
