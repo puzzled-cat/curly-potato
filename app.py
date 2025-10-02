@@ -10,7 +10,7 @@ from queue import Queue, Empty
 import time
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 
 REMIND_EVERY_MIN = 30
 STATE_FILE = os.path.join("data", "state.json")
@@ -239,8 +239,6 @@ def set_pouches(total: int) -> int:
         remove_catfood_todo()
 
     return n
-
-
 
 def save_lists():
     data = {"lists": lists}
@@ -471,6 +469,14 @@ def api_item_delete(name, item_id):
     sse_publish("lists:update", {"name": name, "ts": time.time()})
 
     return jsonify({"ok": True})
+
+@app.post("/api/lists/<name>")
+def api_list_create(name):
+    if name not in lists:
+        ensure_list(name)
+        save_lists()
+        sse_publish("lists:index", {"lists": list(lists.keys())})
+    return jsonify({"ok": True, "name": name})
 
 @app.post("/api/lists/<name>/clear_done")
 def api_clear_done(name):
