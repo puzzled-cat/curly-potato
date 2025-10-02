@@ -67,15 +67,11 @@ function publishToday({ code, iconHTML }) {
     window.dispatchEvent(new CustomEvent("weather:update", { detail: { code, iconHTML } }));
 }
 
-function todayWeatherCode(daily) {
-    // Open-Meteo puts today at index 0
-    return Array.isArray(daily?.weathercode) ? daily.weathercode[0] : null;
-}
-
 export function renderWeatherCard(data) {
     const now = data.current_weather || {};
     const tempC = typeof now.temperature === "number" ? Math.round(now.temperature) : null;
     const current_code = typeof now.weathercode === "number" ? now.weathercode : null;
+    renderNextDays(data);
 
     // wind speed m/s -> mph
     const windMps = typeof now.windspeed === "number" ? now.windspeed : null;
@@ -124,7 +120,7 @@ export function initWeather({
         try {
             // If your fetcher ignores lat/lon, that's fine; otherwise pass them in
             const data = await fetcher(lat, lon);
-            const iconHTML = renderWeatherCard(data);            // 👈 get icon markup from renderer
+            const iconHTML = renderWeatherCard(data);
             renderWeatherCard(data);
             const code = Array.isArray(data?.daily?.weathercode) ? data.daily.weathercode[0] : null;
             publishToday({ code, iconHTML });
