@@ -19,6 +19,9 @@
   --switch-w: clamp(50px, 9vw, 56px);
   --switch-h: clamp(26px, 5vw, 30px);
   --knob: calc(var(--switch-h) - 6px);
+
+  --scroll-thumb: #555;
+  --scroll-thumb-hover: #777;
 }
 
 html {
@@ -361,6 +364,13 @@ body {
   }
 }
 
+.list-col {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+  /* or a fixed value like 500px */
+}
+
 .list-col .list-add {
   display: flex;
   gap: 8px;
@@ -390,8 +400,42 @@ body {
   padding: 0;
   margin: 0;
   display: flex;
+  padding-right: 8px;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb, #aaa) transparent;
+}
+
+.list-items::-webkit-scrollbar-track {
+  background: transparent;
+  margin-top: 4px;
+  /* optional: top gap */
+  margin-bottom: 4px;
+  /* optional: bottom gap */
+}
+
+/* Chrome, Edge, Safari */
+.list-items::-webkit-scrollbar {
+  width: 6px;
+  /* thin scrollbar */
+}
+
+.list-items::-webkit-scrollbar-track {
+  background: transparent;
+  /* no background track */
+}
+
+.list-items::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb, #aaa);
+  border-radius: 4px;
+}
+
+.list-items::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scroll-thumb-hover, #888);
 }
 
 .list-items li {
