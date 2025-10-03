@@ -615,6 +615,7 @@ body {
   padding: 6px 8px;
 }
 
+.tab:hover,
 .list-add-btn:hover {
   background: #1c2230;
   border-color: #2a6af3;
