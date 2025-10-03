@@ -30,7 +30,8 @@
   <!-- Cards -->
   <main class="container">
     <section class="card panel active" id="card-feed" role="tabpanel" aria-labelledby="tab-feed">
-      <h2 id="feed-header">Have you fed the cats yet?</h2>
+      <h2 style="text-align: center;" class="muted" id="feed-header">Have you fed the cats yet?</h2>
+
       <div class="feed-grid">
         {% for t in feed_times %}
         <div class="feed-row">
@@ -88,22 +89,39 @@
     </section>
 
     <section class="card panel" id="card-settings" role="tabpanel">
-      <h2>Lists and Reminders</h2>
-      <!-- List Selector -->
-      <div class="list-header">
-        <select id="listSelect"></select>
-        <button id="clearDoneBtn" class="btn btn-ghost">Clear Completed</button>
-      </div>
+      <h2 style="text-align: center;" class="muted">Lists and Reminders</h2>
 
-      <!-- Add Item -->
-      <div class="list-add">
-        <input id="newItemText" type="text" placeholder="Add new item…" />
-        <button id="addItemBtn" class="btn btn-primary">Add</button>
-      </div>
+      <div class="lists-grid">
+        <!-- Shopping -->
+        <div class="list-col" data-list="shopping">
+          <div class="list-col-header">
+            <h3 style="text-align: center;">🛒 Shopping</h3>
+          </div>
 
-      <!-- List Items -->
-      <ul id="listItems" class="list-items"></ul>
+          <div class="list-add">
+            <input class="list-input" type="text" placeholder="Add new item…" />
+            <button class="btn btn-primary list-add-btn">Add</button>
+          </div>
+
+          <ul class="list-items"></ul>
+        </div>
+
+        <!-- To-Dos -->
+        <div class="list-col" data-list="todo">
+          <div class="list-col-header">
+            <h3 style="text-align: center;">✅ To-Dos</h3>
+          </div>
+
+          <div class="list-add">
+            <input class="list-input" type="text" placeholder="Add new task…" />
+            <button class="btn btn-primary list-add-btn">Add</button>
+          </div>
+
+          <ul class="list-items"></ul>
+        </div>
+      </div>
     </section>
+
 
   </main>
   <script type="module" src="/static/scripts/main.js"></script>

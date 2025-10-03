@@ -338,6 +338,33 @@ body {
   margin-bottom: 12px;
 }
 
+.lists-grid {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 700px) {
+  .lists-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.list-col .list-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.list-col .list-input {
+  flex: 1;
+  background: #121722;
+  border: 1px solid #232838;
+  border-radius: 8px;
+  color: #e6e6e6;
+  padding: 6px 8px;
+}
+
 .list-add input {
   flex: 1;
   background: #121722;
@@ -571,6 +598,24 @@ body {
 
 .pouches-chips .chip:hover,
 .pouches-chips .chip:focus {
+  background: #1c2230;
+  border-color: #2a6af3;
+  outline: none;
+}
+
+.list-add-btn {
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  text-align: center;
+  flex: 1;
+  background: #121722;
+  border: 1px solid #232838;
+  border-radius: 8px;
+  color: #e6e6e6;
+  padding: 6px 8px;
+}
+
+.list-add-btn:hover {
   background: #1c2230;
   border-color: #2a6af3;
   outline: none;
