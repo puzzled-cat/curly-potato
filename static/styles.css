@@ -19,6 +19,9 @@
   --switch-w: clamp(50px, 9vw, 56px);
   --switch-h: clamp(26px, 5vw, 30px);
   --knob: calc(var(--switch-h) - 6px);
+
+  --scroll-thumb: #555;
+  --scroll-thumb-hover: #777;
 }
 
 html {
@@ -322,6 +325,14 @@ body {
   margin-bottom: 10px;
 }
 
+.list-col-header h3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+}
+
 #listSelect {
   flex: 1;
   background: #121722;
@@ -338,6 +349,39 @@ body {
   margin-bottom: 12px;
 }
 
+.lists-grid {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 700px) {
+  .lists-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.list-col {
+  display: flex;
+  flex-direction: column;
+  max-height: 350px;
+}
+
+.list-col .list-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.list-col .list-input {
+  flex: 1;
+  background: #121722;
+  border: 1px solid #232838;
+  border-radius: 8px;
+  color: #e6e6e6;
+  padding: 6px 8px;
+}
+
 .list-add input {
   flex: 1;
   background: #121722;
@@ -352,8 +396,33 @@ body {
   padding: 0;
   margin: 0;
   display: flex;
+  padding-right: 8px;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb, #aaa) transparent;
+}
+
+.list-items::-webkit-scrollbar-track {
+  background: black;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.list-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.list-items::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb, #aaa);
+  border-radius: 4px;
+}
+
+.list-items::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scroll-thumb-hover, #888);
 }
 
 .list-items li {
@@ -412,4 +481,187 @@ body {
 .wx-day .wx-rain {
   color: #a8b0c0;
   font-size: .95rem;
+}
+
+/* Fade wrapper for weather panel */
+.fade-shell {
+  transition: opacity 300ms ease;
+  will-change: opacity;
+}
+
+.fade-shell.is-hiding {
+  opacity: 0;
+}
+
+/* Respect accessibility settings */
+@media (prefers-reduced-motion: reduce) {
+  .fade-shell {
+    transition: none;
+  }
+}
+
+.cat-food-tracker {
+  display: grid;
+  grid-template-columns: auto auto;
+  /* input | button on the second row */
+  grid-template-rows: auto auto;
+  /* labels on top, controls below */
+  gap: var(--space-1);
+  align-items: center;
+  margin-top: var(--space-1);
+}
+
+.cat-food-tracker .muted {
+  grid-column: 1 / -1;
+  /* labels span both columns */
+}
+
+.cat-food-tracker input[type="number"] {
+  width: 60px;
+  /* small numeric box */
+  background: #121722;
+  color: #e6e6e6;
+  border: 1px solid #232838;
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: var(--fs-base);
+  text-align: center;
+}
+
+.cat-food-tracker input[type="number"]:focus {
+  outline: 2px solid #2a6af3;
+  border-color: #2a6af3;
+}
+
+/* Remove number spinners */
+.cat-food-tracker input[type="number"]::-webkit-outer-spin-button,
+.cat-food-tracker input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.cat-food-tracker input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+#clearDoneBtn,
+#addItemBtn,
+.cat-food-tracker #addFoodBtn.btn {
+  background: #121722;
+  /* same as input background */
+  color: #e6e6e6;
+  /* light text */
+  border: 1px solid #232838;
+  /* same border as input */
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: var(--fs-sm);
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+#clearDoneBtn.btn:hover,
+#addItemBtn.btn:hover,
+.cat-food-tracker #addFoodBtn.btn:hover {
+  background: #1c2230;
+  /* slightly lighter on hover */
+  border-color: #2a6af3;
+  /* match your theme blue */
+}
+
+#clearDoneBtn.btn:active,
+#addItemBtn.btn:active,
+.cat-food-tracker #addFoodBtn.btn:active {
+  background: #2a6af3;
+  /* active = highlight */
+  border-color: #2a6af3;
+  color: white;
+}
+
+#clearDoneBtn.btn:focus,
+#addItemBtn.btn:focus,
+.cat-food-tracker #addFoodBtn.btn:focus {
+  outline: 2px solid #2a6af3;
+  /* same focus ring as input */
+  outline-offset: 0;
+}
+
+.pouches {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  flex-wrap: nowrap;
+  /* prevent wrapping on narrow screens */
+}
+
+.pouches-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pouches-label {
+  font-size: var(--fs-lg);
+  color: #a8b0c0;
+  line-height: 1;
+  /* normalize vertical alignment */
+}
+
+.pouches-value {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: #e6e6e6;
+  line-height: 1;
+}
+
+.pouches-chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pouches-chips .chip {
+  background: #121722;
+  color: #e6e6e6;
+  border: 1px solid #232838;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: var(--fs-lg);
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  text-align: center;
+}
+
+.pouches-chips .chip:hover,
+.pouches-chips .chip:focus {
+  background: #1c2230;
+  border-color: #2a6af3;
+  outline: none;
+}
+
+.list-add-btn {
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  text-align: center;
+  flex: 1;
+  background: #121722;
+  border: 1px solid #232838;
+  border-radius: 8px;
+  color: #e6e6e6;
+  padding: 6px 8px;
+}
+
+.list-input:hover,
+.tab:hover,
+.list-add-btn:hover {
+  background: #1c2230;
+  border-color: #2a6af3;
+  outline: none;
+  box-shadow: none;
 }

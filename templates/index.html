@@ -11,6 +11,7 @@
   </style>
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet" href="/static/keyboard.css" />
 </head>
 
 <body>
@@ -22,7 +23,7 @@
 
   <!-- Tabs -->
   <nav class="tabs" role="tablist" aria-label="Panels">
-    <button class="tab" role="tab" data-target="card-feed" aria-selected="true">Home</button>
+    <button class="tab" role="tab" data-target="card-feed" aria-selected="true">Cat Dashboard</button>
     <button class="tab" role="tab" data-target="card-logs">Weather</button>
     <button class="tab" role="tab" data-target="card-settings">Lists and Reminders</button>
   </nav>
@@ -30,7 +31,8 @@
   <!-- Cards -->
   <main class="container">
     <section class="card panel active" id="card-feed" role="tabpanel" aria-labelledby="tab-feed">
-      <h2 id="feed-header">Have you fed the cats yet?</h2>
+      <h2 style="text-align: center;" class="muted" id="feed-header">Have you fed the cats yet?</h2>
+
       <div class="feed-grid">
         {% for t in feed_times %}
         <div class="feed-row">
@@ -44,13 +46,25 @@
         </div>
         {% endfor %}
       </div>
+      <div class="pouches card-line">
+        <div class="pouches-left">
+          <span class="pouches-label">Pouches left:</span>
+          <span class="pouches-value" id="pouchesValue">—</span>
+        </div>
+
+        <div class="pouches-chips">
+          <button class="chip" data-add="6">+6</button>
+          <button class="chip" data-add="12">+12</button>
+        </div>
+      </div>
+
       <br>
       <hr>
       <small class="muted" id="catFactBox">-</small>
     </section>
 
     <section class="card panel" id="card-logs" role="tabpanel">
-      <h2 style="text-align: center;" class="muted">Belfast</h2>
+      <h2 style="text-align: center;" class="muted wx-location-name">—</h2>
       <h3 style="text-align: center;" class="muted">Today</h3>
       <p style="text-align: center;" id="wx-updated" class="muted">—</p>
       <div id="wx" class="wx-grid">
@@ -76,25 +90,53 @@
     </section>
 
     <section class="card panel" id="card-settings" role="tabpanel">
-      <h2>Lists and Reminders</h2>
-      <!-- List Selector -->
-      <div class="list-header">
-        <select id="listSelect"></select>
-        <button id="clearDoneBtn" class="btn btn-ghost">Clear Completed</button>
-      </div>
+      <h2 style="text-align: center;" class="muted">Lists and Reminders</h2>
 
-      <!-- Add Item -->
-      <div class="list-add">
-        <input id="newItemText" type="text" placeholder="Add new item…" />
-        <button id="addItemBtn" class="btn btn-primary">Add</button>
-      </div>
+      <div class="lists-grid">
+        <!-- Shopping -->
+        <div class="list-col" data-list="shopping">
+          <div class="list-col-header">
+            <h3>
+              <span class="material-symbols-outlined">shopping_cart</span>
+              Shopping
+            </h3>
+            <hr>
+          </div>
 
-      <!-- List Items -->
-      <ul id="listItems" class="list-items"></ul>
+          <!-- data-virtualkeyboard add on elements needing OSK -->
+          <div class="list-add">
+            <input class="list-input" type="text" placeholder="Add new item…" />
+            <button class="btn btn-primary list-add-btn">Add</button>
+          </div>
+
+          <ul class="list-items"></ul>
+        </div>
+
+        <!-- To-Dos -->
+        <div class="list-col" data-list="todo">
+          <div class="list-col-header">
+            <h3>
+              <span class="material-symbols-outlined">checklist</span>
+              To Do
+            </h3>
+            <hr>
+          </div>
+
+          <div class="list-add">
+            <input class="list-input" type="text" placeholder="Add new task…" />
+            <button class="btn btn-primary list-add-btn">Add</button>
+          </div>
+
+          <ul class="list-items"></ul>
+        </div>
+      </div>
     </section>
 
+    <div id="vk" aria-label="On-screen keyboard" hidden></div>
+
   </main>
-  <script src="/static/main.js"></script>
+  <script src='/static/scripts/keyboard.js'></script>
+  <script type="module" src="/static/scripts/main.js"></script>
 </body>
 
 </html>

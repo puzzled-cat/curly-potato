@@ -1,0 +1,150 @@
+:root {
+    /* glass panel */
+    --vk-bg: rgba(22, 26, 34, 0.55);
+    /* frosted backdrop */
+    --vk-bg-grad: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    --vk-panel-border: rgba(255, 255, 255, 0.08);
+
+    /* keys */
+    --vk-key: rgba(30, 35, 48, 0.55);
+    --vk-key-hover: rgba(42, 48, 64, 0.60);
+    --vk-key-active: rgba(24, 28, 37, 0.60);
+
+    --vk-text: #bbb;
+
+    /* effects */
+    --vk-key-shadow: 0 2px 8px rgba(0, 0, 0, .35), inset 0 1px rgba(255, 255, 255, .05);
+    --vk-key-shadow-pressed: 0 1px 4px rgba(0, 0, 0, .45), inset 0 2px 6px rgba(0, 0, 0, .35);
+    --vk-active-glow: 0 0 0 1px rgba(138, 180, 248, .35) inset;
+    /* subtle inner glow, not an outline */
+    --vk-ripple: rgba(255, 255, 255, .25);
+}
+
+html.vk-open body {
+    padding-bottom: 220px;
+}
+
+/* --- glass panel --- */
+#vk {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 8px;
+    height: 220px;
+    display: none;
+    /* hidden by default */
+    gap: 6px;
+    z-index: 9999;
+
+    background: var(--vk-bg);
+    background-image: var(--vk-bg-grad);
+    backdrop-filter: blur(10px);
+    /* frosted */
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--vk-panel-border);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, .25);
+    contain: paint;
+    /* perf hint on Pi */
+    opacity: 0.25;
+    transform: translateY(100%);
+    transition: opacity .25s ease, transform .25s ease;
+}
+
+#vk.visible {
+    display: grid;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#vk .row {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 6px;
+    justify-content: center;
+}
+
+/* --- keys --- */
+#vk button {
+    position: relative;
+    min-width: 40px;
+    height: 44px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--vk-key);
+    color: var(--vk-text);
+    font: 500 16px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    box-shadow: var(--vk-key-shadow);
+    outline: none;
+    /* no browser ring */
+    overflow: hidden;
+    /* for ripple */
+    transition:
+        background .14s ease,
+        transform .08s ease,
+        box-shadow .14s ease,
+        filter .14s ease;
+    will-change: transform;
+}
+
+#vk button.mod {
+    min-width: 64px;
+}
+
+#vk button.wide {
+    min-width: 96px;
+}
+
+/* hover/press */
+#vk button:hover {
+    background: var(--vk-key-hover);
+    transform: translateY(-1px);
+}
+
+#vk button:active {
+    background: var(--vk-key-active);
+    transform: translateY(0);
+    box-shadow: var(--vk-key-shadow-pressed);
+}
+
+/* subtle ripple (centered; CSS-only) */
+#vk button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, var(--vk-ripple), transparent 45%);
+    opacity: 0;
+    transition: opacity .25s ease;
+}
+
+#vk button:active::after {
+    opacity: 1;
+    transition-duration: .12s;
+}
+
+/* toggled state (Caps/Shift) — no outline, just inner glow + lift */
+#vk button.active {
+    background: var(--vk-key-hover);
+    box-shadow: var(--vk-active-glow), var(--vk-key-shadow);
+}
+
+/* scrollbars elsewhere */
+.list-items {
+    scrollbar-gutter: stable;
+}
+
+/* motion respect (kiosk friendliness) */
+@media (prefers-reduced-motion: reduce) {
+    #vk {
+        transition: none;
+    }
+
+    #vk button {
+        transition: none;
+    }
+
+    #vk button::after {
+        transition: none;
+    }
+}
