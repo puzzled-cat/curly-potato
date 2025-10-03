@@ -11,10 +11,24 @@ import time
 
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
+CONFIG_FILE = os.path.join("data", "config.json")
+CONFIG = {}
+# CONFIG
+def load_config():
+    global CONFIG
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            CONFIG = json.load(f)
+        print(f"[CONFIG] Loaded {CONFIG_FILE}")
+    except Exception as e:
+        print(f"[CONFIG] Failed to load {CONFIG_FILE}: {e}")
+        CONFIG = {}
+
+load_config()
 
 REMIND_EVERY_MIN = 30
 STATE_FILE = os.path.join("data", "state.json")
-FEED_TIMES = ["09:00", "12:00", "17:00"]
+FEED_TIMES = CONFIG.get("feeding", {}).get("times", ["09:00", "12:00", "17:00"])
 
 # Track whether each slot has been fed
 feeding = {t: False for t in FEED_TIMES}
@@ -29,6 +43,7 @@ lists = {}  # in-memory {name: {title, items[], updated_at}}
 
 TODO_LIST_NAME = "shopping"      # name of the list to use
 TODO_ITEM_TEXT = "Buy cat food"  # text of the reminder item
+
 
 # --- SSE hub ---
 _sse_subs = set()
