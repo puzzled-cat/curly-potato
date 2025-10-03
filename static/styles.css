@@ -414,6 +414,23 @@ body {
   font-size: .95rem;
 }
 
+/* Fade wrapper for weather panel */
+.fade-shell {
+  transition: opacity 300ms ease;
+  will-change: opacity;
+}
+
+.fade-shell.is-hiding {
+  opacity: 0;
+}
+
+/* Respect accessibility settings */
+@media (prefers-reduced-motion: reduce) {
+  .fade-shell {
+    transition: none;
+  }
+}
+
 .cat-food-tracker {
   display: grid;
   grid-template-columns: auto auto;

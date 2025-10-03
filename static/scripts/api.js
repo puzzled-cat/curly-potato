@@ -23,19 +23,50 @@ export async function setFeeding(time, fed) {
 }
 
 // --- Weather ---
-export async function fetchWeatherBelfast() {
+/**
+ * Fetch Open-Meteo forecast for an arbitrary location.
+ * @param {number} lat
+ * @param {number} lon
+ * @param {Object} [opts]
+ * @param {string} [opts.timezone="auto"]
+ * @param {string} [opts.temperature_unit="celsius"]  // "celsius" | "fahrenheit"
+ * @param {string} [opts.wind_speed_unit="ms"]        // "ms" | "kmh" | "mph" | "kn"
+ * @param {string[]} [opts.hourly=["precipitation_probability"]]
+ * @param {string[]} [opts.daily=["temperature_2m_max","temperature_2m_min","precipitation_probability_max","weathercode"]]
+ * @param {boolean} [opts.current_weather=true]
+ */
+export async function fetchWeather(lat, lon, opts = {}) {
+    const {
+        timezone = "auto",
+        temperature_unit = "celsius",
+        wind_speed_unit = "ms",
+        hourly = ["precipitation_probability"],
+        daily = [
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_probability_max",
+            "weathercode"
+        ],
+        current_weather = true,
+    } = opts;
+
     const params = new URLSearchParams({
-        latitude: DEFAULT_LAT,
-        longitude: DEFAULT_LON,
-        timezone: "auto",
-        current_weather: "true",
-        hourly: "precipitation_probability",
-        daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode",
-        temperature_unit: "celsius",
-        wind_speed_unit: "ms"
+        latitude: String(lat),
+        longitude: String(lon),
+        timezone,
+        temperature_unit,
+        wind_speed_unit,
+        current_weather: String(current_weather),
+        hourly: hourly.join(","),
+        daily: daily.join(","),
     });
-    const res = await fetch("https://api.open-meteo.com/v1/forecast?" + params.toString());
-    if (!res.ok) throw new Error("Weather fetch failed");
+
+    const url = `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Weather fetch failed (${res.status}): ${text || url}`);
+    }
     return res.json();
 }
 

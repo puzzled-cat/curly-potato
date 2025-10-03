@@ -1,14 +1,20 @@
-// static/js/weather.js
+// static/scripts/weather.js
 // ---------------------------------
 // Weather card rendering + refresh
 // ---------------------------------
 
-import { fetchWeatherBelfast } from './api.js';
+import { fetchWeather } from './api.js';
 
 // ---- Defaults (can be overridden via initWeather options)
 const DEFAULT_LAT = 54.58314393020901;
 const DEFAULT_LON = -5.898022460442155;
 const DEFAULT_REFRESH_MS = 10 * 60 * 1000; // 10 minutes
+
+const FADE_MS = 300; // keep in sync with CSS
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 // ---- Internals
 function isoHourLocal(d = new Date()) {
@@ -61,7 +67,7 @@ export function renderNextDays(data) {
 
 function publishToday({ code, iconHTML }) {
     try {
-        localStorage.setItem("wx_today_code", String(code));
+        localStorage.setItem("wx_today_code", String(code ?? ""));
         localStorage.setItem("wx_today_icon", iconHTML || "");
     } catch { }
     window.dispatchEvent(new CustomEvent("weather:update", { detail: { code, iconHTML } }));
@@ -71,6 +77,7 @@ export function renderWeatherCard(data) {
     const now = data.current_weather || {};
     const tempC = typeof now.temperature === "number" ? Math.round(now.temperature) : null;
     const current_code = typeof now.weathercode === "number" ? now.weathercode : null;
+
     renderNextDays(data);
 
     // wind speed m/s -> mph
@@ -90,39 +97,41 @@ export function renderWeatherCard(data) {
     const tMax = data.daily?.temperature_2m_max?.[0];
     const tMin = data.daily?.temperature_2m_min?.[0];
 
-    const get = (id) => document.getElementById(id);
-    const set = (id, text) => { const el = get(id); if (el) el.textContent = text; };
+    const set = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    };
 
     set("wx-temp", tempC != null ? `${tempC}°C` : "—");
     set("wx-rain", rainPct != null ? `${rainPct}%` : "—");
     set("wx-wind", windMph != null ? `${windMph} mph` : "—");
     set("wx-range", (tMin != null && tMax != null) ? `${Math.round(tMin)}° / ${Math.round(tMax)}°` : "—");
     set("wx-updated", `Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-    return current_code != null ? wxIcon(current_code) : "🌡️";
+
+    return {
+        code: current_code,
+        iconHTML: wxIcon(current_code)
+    };
 }
 
 /**
- * Start periodic weather updates.
- * @param {Object} opts
- * @param {number} opts.lat - latitude (default Belfast)
- * @param {number} opts.lon - longitude
- * @param {number} opts.refreshMs - refresh interval
- * @param {Function} opts.fetcher - custom fetcher (defaults to fetchWeatherBelfast)
+ * Start periodic weather updates for a single location (no rotation).
  */
 export function initWeather({
     lat = DEFAULT_LAT,
     lon = DEFAULT_LON,
     refreshMs = DEFAULT_REFRESH_MS,
-    fetcher = fetchWeatherBelfast, // uses lat/lon you defined inside api.js; override if needed
 } = {}) {
-    // If you want per-location fetching, provide a fetcher that accepts (lat, lon)
     async function updateWeatherCard() {
         try {
-            // If your fetcher ignores lat/lon, that's fine; otherwise pass them in
-            const data = await fetcher(lat, lon);
-            const iconHTML = renderWeatherCard(data);
-            renderWeatherCard(data);
-            const code = Array.isArray(data?.daily?.weathercode) ? data.daily.weathercode[0] : null;
+            const data = await fetchWeather(lat, lon, {
+                temperature_unit: "celsius",
+                wind_speed_unit: "mph",
+                hourly: ["precipitation_probability"],
+                daily: ["temperature_2m_max", "temperature_2m_min", "precipitation_probability_max", "weathercode"],
+                current_weather: true,
+            });
+            const { code, iconHTML } = renderWeatherCard(data);
             publishToday({ code, iconHTML });
         } catch (e) {
             console.error("[Weather] fetch failed:", e);
@@ -131,7 +140,88 @@ export function initWeather({
         }
     }
 
-    // initial + interval
     updateWeatherCard();
     setInterval(updateWeatherCard, refreshMs);
+}
+
+/**
+ * Rotate through multiple locations using one card.
+ * - locations: [{ name, latitude, longitude, primary? }, ...]
+ * - refreshMs: data freshness per-location (refetch after this)
+ * - rotateMs: how often to switch displayed location
+ * - nameSelector: optional element to show the location name
+ */
+export function initWeatherRotator({
+    locations = [],
+    refreshMs = DEFAULT_REFRESH_MS,
+    rotateMs = 30 * 1000,
+    nameSelector = ".wx-location-name",
+} = {}) {
+    if (!Array.isArray(locations) || locations.length === 0) return;
+
+    let idx = 0;
+    const cache = new Map(); // key -> { data, ts }
+    const keyOf = (loc) =>
+        (loc?.name || `${loc?.latitude},${loc?.longitude}` || "loc").toLowerCase();
+
+    const isFresh = (entry) => entry && (Date.now() - entry.ts) < refreshMs;
+
+    async function getData(loc) {
+        const key = keyOf(loc);
+        const entry = cache.get(key);
+        if (isFresh(entry)) return entry.data;
+
+        const data = await fetchWeather(loc.latitude, loc.longitude, {
+            temperature_unit: "celsius",
+            wind_speed_unit: "mph",
+            hourly: ["precipitation_probability"],
+            daily: ["temperature_2m_max", "temperature_2m_min", "precipitation_probability_max", "weathercode"],
+            current_weather: true,
+        });
+        cache.set(key, { data, ts: Date.now() });
+        return data;
+    }
+
+    async function show(loc) {
+        if (!loc) return;
+        try {
+            // 1) fetch (or use cache) BEFORE animating
+            const data = await getData(loc);
+
+            const shellSelector = '#card-logs'
+            // 2) fade out shell
+            const shell = document.querySelector(shellSelector);
+            if (shell) {
+                shell.classList.add("fade-shell", "is-hiding");
+                await sleep(FADE_MS);
+            }
+
+            // 3) render new location + publish toolbar icon
+            const { code, iconHTML } = renderWeatherCard(data);
+            publishToday({ code, iconHTML });
+
+            // optional: show location name
+            const nameEl = document.querySelector(nameSelector);
+            if (nameEl) nameEl.textContent = loc.name || `${loc.latitude.toFixed(2)}, ${loc.longitude.toFixed(2)}`;
+
+            // 4) fade back in
+            if (shell) {
+                shell.classList.remove("is-hiding");
+            }
+        } catch (e) {
+            console.error("[WeatherRotator] show failed:", e);
+        }
+    }
+    // start with primary if present
+    const pIdx = locations.findIndex(l => l && l.primary);
+    idx = pIdx >= 0 ? pIdx : 0;
+
+    show(locations[idx]);
+
+    setInterval(() => {
+        idx = (idx + 1) % locations.length;
+        const loc = locations[idx];
+        show(loc);
+        console.log("[WeatherRotator] switching to", loc);
+    }, rotateMs);
 }

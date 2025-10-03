@@ -13,7 +13,7 @@ import { initListsUI } from './lists.js';
 
 // Live updates + weather + cat facts
 import { initSSE } from './sse.js';
-import { initWeather } from './weather.js';
+import { initWeather, initWeatherRotator } from './weather.js';
 import { startCatFacts, loadCatAvatars, attachAvatarRefresh } from './cat-fact.js';
 
 // -----------------------------
@@ -143,6 +143,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Config fetch failed', err);
   }
 
+  // after config is set
+  const locs = Array.isArray(config?.locations) ? config.locations : [];
+  const refreshMs = (config?.ui?.weather_refresh_minutes ?? 10) * 60 * 1000;
+  console.log(locs)
+
+  if (locs.length > 1) {
+    initWeatherRotator({
+      locations: locs,
+      refreshMs,
+      rotateMs: 30_000,
+      nameSelector: '.wx-location-name',   // optional label in card
+      shellSelector: '#card-logs',         // your weather card section
+    });
+  } else {
+    const loc = locs[0] ?? { latitude: 54.5831, longitude: -5.8980 };
+    initWeather({ lat: loc.latitude, lon: loc.longitude, refreshMs });
+  }
+
   // Live updates first so UI reacts quickly
   initSSE();
   // Panels & toolbar basics
@@ -158,7 +176,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(cycleMessages, 10_000);
 
   // Weather (Belfast defaults; change via options if needed)
-  initWeather();
 
   // Cat facts + avatars
   startCatFacts({ intervalMs: 5 * 60 * 1000, selector: '#catFactBox' });
