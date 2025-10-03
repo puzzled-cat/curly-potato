@@ -1,4 +1,3 @@
-// static/js/sse.js
 // --------------------------------------
 // Server-Sent Events (SSE) live updates
 // --------------------------------------
@@ -23,7 +22,7 @@ export function initSSE() {
 
     // --- Feeding updates ---
     es.addEventListener("feeding:update", (e) => {
-        const data = JSON.parse(e.data); // { feeding: {...} }
+        const data = JSON.parse(e.data);
         if (data && data.feeding) {
             renderFeeding(data.feeding);
             updateStatusLabels(data.feeding);
@@ -48,12 +47,10 @@ export function initSSE() {
 
     // --- Heartbeat & error handling ---
     es.addEventListener("heartbeat", () => {
-        // Optional: set a "connected" indicator here
-        // console.log("[SSE] heartbeat");
+        console.log("[SSE] heartbeat");
     });
 
     es.onerror = () => {
         console.warn("[SSE] Connection error — retrying automatically...");
-        // Optional: show disconnected badge in UI
     };
 }

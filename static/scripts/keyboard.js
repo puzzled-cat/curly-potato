@@ -96,7 +96,6 @@
         shift = false;
     }
 
-
     document.addEventListener('focusin', (e) => {
         const el = e.target;
         if (el.matches('input[data-virtualkeyboard], textarea[data-virtualkeyboard]')) {

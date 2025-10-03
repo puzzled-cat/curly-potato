@@ -1,20 +1,13 @@
-// static/js/lists-ui.js
 // -----------------------------
 // UI event bindings for side-by-side Lists panel
 // -----------------------------
 
-/**
- * Fetch a list by name.
- */
 async function getList(name) {
     const r = await fetch(`/api/lists/${encodeURIComponent(name)}`);
     if (!r.ok) throw new Error(`getList(${name}) failed`);
     return r.json();
 }
 
-/**
- * Add an item to a list.
- */
 async function addItem(name, text) {
     const r = await fetch(`/api/lists/${encodeURIComponent(name)}/items`, {
         method: 'POST',
@@ -25,9 +18,6 @@ async function addItem(name, text) {
     return r.json();
 }
 
-/**
- * Patch an item (done toggle).
- */
 async function patchItem(name, id, done) {
     const r = await fetch(`/api/lists/${encodeURIComponent(name)}/items/${encodeURIComponent(id)}`, {
         method: 'PATCH',
@@ -37,9 +27,6 @@ async function patchItem(name, id, done) {
     if (!r.ok) throw new Error(`patchItem(${name}, ${id}) failed`);
 }
 
-/**
- * Delete an item.
- */
 async function deleteItem(name, id) {
     const r = await fetch(`/api/lists/${encodeURIComponent(name)}/items/${encodeURIComponent(id)}`, {
         method: 'DELETE',
@@ -47,9 +34,7 @@ async function deleteItem(name, id) {
     if (!r.ok) throw new Error(`deleteItem(${name}, ${id}) failed`);
 }
 
-/**
- * Render a list into a specific column container.
- */
+//Render a list into a specific column container.
 async function renderListInto(col) {
     const name = col.dataset.list;
     const ul = col.querySelector('.list-items');
@@ -67,7 +52,6 @@ async function renderListInto(col) {
         cb.checked = !!item.done;
         cb.addEventListener('change', async () => {
             await patchItem(name, item.id, cb.checked);
-            // Optimistic update:
             li.classList.toggle('done', cb.checked);
         });
 
@@ -78,7 +62,6 @@ async function renderListInto(col) {
         del.innerHTML = '✖';
         del.addEventListener('click', async () => {
             await deleteItem(name, item.id);
-            // Remove from UI immediately
             li.remove();
         });
 
@@ -89,9 +72,6 @@ async function renderListInto(col) {
     });
 }
 
-/**
- * Initialize side-by-side lists UI. Call once on DOMContentLoaded.
- */
 export function initListsUI() {
     const cols = document.querySelectorAll('.list-col[data-list]');
     if (!cols.length) {
@@ -122,7 +102,6 @@ export function initListsUI() {
     // Initial render for both columns
     cols.forEach(col => renderListInto(col));
 
-    // Optional: Live updates via SSE if you already have /events wired
     if ('EventSource' in window) {
         try {
             const es = new EventSource('/events');

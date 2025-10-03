@@ -1,24 +1,17 @@
-// static/js/main.js
 // -------------------------------------------------
 // Bootstrap for Curly Potato UI (ES module)
 // -------------------------------------------------
 
-// API calls
 import { fetchFeeding, setFeeding } from './api.js';
 
-// UI helpers
 import { renderFeeding, updateStatusLabels } from './feeding.js';
 import { initPouchesChips } from './pouches.js';
 import { initListsUI } from './lists.js';
-
-// Live updates + weather + cat facts
 import { initSSE } from './sse.js';
 import { initWeather, initWeatherRotator } from './weather.js';
 import { startCatFacts, loadCatAvatars, attachAvatarRefresh } from './cat-fact.js';
 
-// -----------------------------
 // Fetch config from server
-// -----------------------------
 async function fetchConfig() {
   const res = await fetch('/api/config');
   if (!res.ok) throw new Error("Failed to fetch config");
@@ -27,9 +20,7 @@ async function fetchConfig() {
 
 let config;
 
-// -----------------------------
 // Toolbar status messages
-// -----------------------------
 const messages = [
   "Remember to stay hydrated!",
   "Remember to do the recycling!",
@@ -46,9 +37,7 @@ function cycleMessages() {
   currentIndex = (currentIndex + 1) % messages.length;
 }
 
-// -----------------------------
 // Clock + toolbar icons
-// -----------------------------
 function updateClock() {
   const now = new Date();
   const options = { weekday: 'short', day: 'numeric', month: 'short' };
@@ -64,7 +53,6 @@ function renderToolbarIcons({ iconHTML = null } = {}) {
   box.innerHTML = "";
 
   const BIN_DAY = config?.bin.collection_day || 3; // default to Wednesday if not set
-  // bin-day (Wednesday)
   if (new Date().getDay() === BIN_DAY) {
     const bin = document.createElement("span");
     bin.className = "icon material-symbols-outlined";
@@ -73,11 +61,11 @@ function renderToolbarIcons({ iconHTML = null } = {}) {
     box.appendChild(bin);
   }
 
-  // weather icon from weather.js (already-built HTML)
+  // weather icon
   if (iconHTML) {
     const wrap = document.createElement("span");
     wrap.className = "icon";
-    wrap.innerHTML = iconHTML;   // safe because the string is produced locally by your code
+    wrap.innerHTML = iconHTML;   // safe because the string is produced locally
     box.appendChild(wrap);
   }
 }
@@ -88,13 +76,10 @@ window.addEventListener("weather:update", (e) => {
   renderToolbarIcons({ iconHTML });
 });
 
-// first paint: use cached icon (if present)
 const cachedIcon = localStorage.getItem("wx_today_icon");
 renderToolbarIcons({ iconHTML: cachedIcon });
 
-// -----------------------------
 // Tabs
-// -----------------------------
 function showPanel(id) {
   document.querySelectorAll('.panel')
     .forEach(p => p.classList.toggle('active', p.id === id));
@@ -118,9 +103,7 @@ function initTabs() {
   else showPanel('card-logs'); // default
 }
 
-// -----------------------------
 // Feeding toggles (UI events)
-// -----------------------------
 function initFeedingToggles() {
   document.querySelectorAll('input[data-feed]').forEach(cb => {
     cb.addEventListener('change', async () => {
@@ -131,19 +114,14 @@ function initFeedingToggles() {
   });
 }
 
-// -----------------------------
 // Bootstrap
-// -----------------------------
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     config = await fetchConfig();
-    console.log(config);
-    // apply config here if needed
   } catch (err) {
     console.error('Config fetch failed', err);
   }
 
-  // after config is set
   const locs = Array.isArray(config?.locations) ? config.locations : [];
   const refreshMs = (config?.ui?.weather_refresh_minutes ?? 10) * 60 * 1000;
   console.log(locs)
@@ -153,8 +131,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       locations: locs,
       refreshMs,
       rotateMs: 30_000,
-      nameSelector: '.wx-location-name',   // optional label in card
-      shellSelector: '#card-logs',         // your weather card section
+      nameSelector: '.wx-location-name',
+      shellSelector: '#card-logs',
     });
   } else {
     const loc = locs[0] ?? { latitude: 54.5831, longitude: -5.8980 };
@@ -198,8 +176,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   initFeedingToggles();
 
-  // (Optional) light fallback poll in case SSE is blocked
-  // Poll only when the tab is visible to reduce noise.
   setInterval(async () => {
     if (document.visibilityState !== 'visible') return;
     try {

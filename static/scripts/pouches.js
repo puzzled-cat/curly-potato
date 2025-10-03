@@ -1,14 +1,9 @@
-// static/js/pouches-ui.js
 // -----------------------------
 // UI bindings for cat food pouches
 // -----------------------------
 
 import { apiGetFood, apiAddFood } from './api.js';
 
-/**
- * Initialize pouch chips (+6, +12, etc).
- * Call once on DOMContentLoaded.
- */
 export function initPouchesChips() {
     const valEl = document.getElementById("pouchesValue");
     if (!valEl) {
@@ -42,6 +37,5 @@ export function initPouchesChips() {
         });
     });
 
-    // initial load
     refresh();
 }

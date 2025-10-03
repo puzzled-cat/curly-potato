@@ -16,7 +16,6 @@ intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-
 # -------- tiny HTTP helper --------
 async def api_json(method: str, path: str, payload: dict | None = None):
     url = f"{API_BASE}{path}"
@@ -33,15 +32,12 @@ async def api_json(method: str, path: str, payload: dict | None = None):
             except Exception:
                 return {}
 
-
 def norm_list_name(name: str) -> str:
     return name.strip().lower().replace(" ", "-")
-
 
 def in_lists_channel(inter: discord.Interaction) -> bool:
     # If LISTS_CHANNEL_ID is set, restrict commands to that channel; else allow anywhere.
     return (LISTS_CHANNEL_ID == 0) or (inter.channel_id == LISTS_CHANNEL_ID)
-
 
 # -------- events --------
 @bot.event
@@ -56,7 +52,6 @@ async def on_ready():
         ch = bot.get_channel(LISTS_CHANNEL_ID)
         if ch:
             await ch.send("🗒️ Lists bot is online.")
-
 
 # -------- /list command group (manual registration for compatibility) --------
 list_group = app_commands.Group(
@@ -100,7 +95,6 @@ async def list_delete(inter: discord.Interaction, name: str):
     except Exception as e:
         await inter.response.send_message(f"❌ {e}", ephemeral=True)
 
-
 @list_group.command(name="add", description="Add an item to a list")
 @app_commands.describe(name="List name", text="Item text")
 async def list_add(inter: discord.Interaction, name: str, text: str):
@@ -115,7 +109,6 @@ async def list_add(inter: discord.Interaction, name: str, text: str):
         await inter.response.send_message(f"➕ Added to **{name_n}**: {text}", ephemeral=False)
     except Exception as e:
         await inter.response.send_message(f"❌ {e}", ephemeral=True)
-
 
 @list_group.command(name="items", description="Show items in a list")
 @app_commands.describe(name="List name")
@@ -146,7 +139,6 @@ async def list_items(inter: discord.Interaction, name: str):
     except Exception as e:
         await inter.response.send_message(f"❌ {e}", ephemeral=True)
 
-
 @list_group.command(name="done", description="Mark an item done/undone")
 @app_commands.describe(
     name="List name",
@@ -169,7 +161,6 @@ async def list_done(inter: discord.Interaction, name: str, item_id: str, done: b
     except Exception as e:
         await inter.response.send_message(f"❌ {e}", ephemeral=True)
 
-
 @list_group.command(name="remove_item", description="Delete an item from a list")
 @app_commands.describe(name="List name", item_id="Item ID (e.g. it_1695999999999)")
 async def list_remove_item(inter: discord.Interaction, name: str, item_id: str):
@@ -184,7 +175,6 @@ async def list_remove_item(inter: discord.Interaction, name: str, item_id: str):
         await inter.response.send_message(f"🗑️ Deleted `{item_id}` from **{name_n}**", ephemeral=False)
     except Exception as e:
         await inter.response.send_message(f"❌ {e}", ephemeral=True)
-
 
 # (Optional) clear all completed in a list
 @list_group.command(name="clear_done", description="Remove all completed items from a list")
@@ -202,7 +192,6 @@ async def list_clear_done(inter: discord.Interaction, name: str):
     except Exception as e:
         await inter.response.send_message(f"❌ {e}", ephemeral=True)
 
-
 # --- Slash commands (pouches) ---
 @tree.command(name="pouches_add", description="Add pouches (management/debug)")
 @app_commands.describe(amount="Number of pouches to add")
@@ -218,7 +207,6 @@ async def pouches_add(inter: discord.Interaction, amount: int):
     except Exception as e:
         await inter.response.send_message(f"❌ Failed to add pouches: {e}", ephemeral=True)
 
-
 @tree.command(name="pouches_set", description="Set pouch total directly (management/debug)")
 @app_commands.describe(total="New total number of pouches")
 async def pouches_set(inter: discord.Interaction, total: int):
@@ -232,7 +220,6 @@ async def pouches_set(inter: discord.Interaction, total: int):
         )
     except Exception as e:
         await inter.response.send_message(f"❌ Failed to set total: {e}", ephemeral=True)
-
 
 # -------- run --------
 if __name__ == "__main__":

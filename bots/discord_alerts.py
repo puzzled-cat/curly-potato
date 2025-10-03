@@ -19,7 +19,6 @@ client = discord.Client(intents=intents)
 EUL_TZ = ZoneInfo("Europe/London")
 EIGHT_AM_UK = dtime(hour=8, minute=0, tzinfo=EUL_TZ)
 
-
 # -------- Scheduled morning message --------
 @tasks.loop(time=EIGHT_AM_UK)
 async def morning_alert():
@@ -28,7 +27,6 @@ async def morning_alert():
     channel = client.get_channel(CHANNEL_ID)
     if channel:
         await channel.send("🌤️ Good morning! Time for your daily check in:")
-
 
 # -------- Bot ready event --------
 @client.event
@@ -41,7 +39,6 @@ async def on_ready():
     check_alerts.start()
     if not morning_alert.is_running():
         morning_alert.start()
-
 
 # -------- Check and relay alerts --------
 @tasks.loop(seconds=30)
@@ -84,7 +81,6 @@ async def check_alerts():
     except FileNotFoundError:
         # alerts.log might not exist yet — ignore
         pass
-
 
 # -------- Run --------
 client.run(TOKEN)

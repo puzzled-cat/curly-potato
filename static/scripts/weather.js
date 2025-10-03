@@ -1,29 +1,26 @@
-// static/scripts/weather.js
 // ---------------------------------
 // Weather card rendering + refresh
 // ---------------------------------
 
 import { fetchWeather } from './api.js';
 
-// ---- Defaults (can be overridden via initWeather options)
+// ---- Defaults
 const DEFAULT_LAT = 54.58314393020901;
 const DEFAULT_LON = -5.898022460442155;
 const DEFAULT_REFRESH_MS = 10 * 60 * 1000; // 10 minutes
 
-const FADE_MS = 300; // keep in sync with CSS
+const FADE_MS = 300;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// ---- Internals
 function isoHourLocal(d = new Date()) {
     const pad = n => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
 }
 
 function wxIcon(code) {
-    // Open-Meteo weathercode → Material Symbol
     if ([0].includes(code)) return "<span class='material-symbols-outlined'>sunny</span>";
     if ([1, 2].includes(code)) return "<span class='material-symbols-outlined'>partly_cloudy_day</span>";
     if ([3].includes(code)) return "<span class='material-symbols-outlined'>cloud</span>";
@@ -114,9 +111,6 @@ export function renderWeatherCard(data) {
     };
 }
 
-/**
- * Start periodic weather updates for a single location (no rotation).
- */
 export function initWeather({
     lat = DEFAULT_LAT,
     lon = DEFAULT_LON,
@@ -144,13 +138,6 @@ export function initWeather({
     setInterval(updateWeatherCard, refreshMs);
 }
 
-/**
- * Rotate through multiple locations using one card.
- * - locations: [{ name, latitude, longitude, primary? }, ...]
- * - refreshMs: data freshness per-location (refetch after this)
- * - rotateMs: how often to switch displayed location
- * - nameSelector: optional element to show the location name
- */
 export function initWeatherRotator({
     locations = [],
     refreshMs = DEFAULT_REFRESH_MS,
@@ -160,7 +147,7 @@ export function initWeatherRotator({
     if (!Array.isArray(locations) || locations.length === 0) return;
 
     let idx = 0;
-    const cache = new Map(); // key -> { data, ts }
+    const cache = new Map();
     const keyOf = (loc) =>
         (loc?.name || `${loc?.latitude},${loc?.longitude}` || "loc").toLowerCase();
 
@@ -185,26 +172,21 @@ export function initWeatherRotator({
     async function show(loc) {
         if (!loc) return;
         try {
-            // 1) fetch (or use cache) BEFORE animating
             const data = await getData(loc);
 
             const shellSelector = '#card-logs'
-            // 2) fade out shell
             const shell = document.querySelector(shellSelector);
             if (shell) {
                 shell.classList.add("fade-shell", "is-hiding");
                 await sleep(FADE_MS);
             }
 
-            // 3) render new location + publish toolbar icon
             const { code, iconHTML } = renderWeatherCard(data);
             publishToday({ code, iconHTML });
 
-            // optional: show location name
             const nameEl = document.querySelector(nameSelector);
             if (nameEl) nameEl.textContent = loc.name || `${loc.latitude.toFixed(2)}, ${loc.longitude.toFixed(2)}`;
 
-            // 4) fade back in
             if (shell) {
                 shell.classList.remove("is-hiding");
             }

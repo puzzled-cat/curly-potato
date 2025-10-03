@@ -4,9 +4,6 @@
 
 const CATFACT_URL = "https://catfact.ninja/facts";
 
-const DEFAULT_LAT = 54.58314393020901;
-const DEFAULT_LON = -5.898022460442155;
-
 // --- Feeding ---
 export async function fetchFeeding() {
     const res = await fetch("/api/feeding");
