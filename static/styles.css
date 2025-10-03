@@ -322,6 +322,17 @@ body {
   margin-bottom: 10px;
 }
 
+.list-col-header h3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* center horizontally */
+  gap: 6px;
+  /* space between icon and text */
+  margin: 0;
+  /* optional: reset default h3 margins */
+}
+
 #listSelect {
   flex: 1;
   background: #121722;
@@ -615,6 +626,7 @@ body {
   padding: 6px 8px;
 }
 
+.list-input:hover,
 .tab:hover,
 .list-add-btn:hover {
   background: #1c2230;
