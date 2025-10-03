@@ -17,6 +17,17 @@ import { initWeather } from './weather.js';
 import { startCatFacts, loadCatAvatars, attachAvatarRefresh } from './cat-fact.js';
 
 // -----------------------------
+// Fetch config from server
+// -----------------------------
+async function fetchConfig() {
+  const res = await fetch('/api/config');
+  if (!res.ok) throw new Error("Failed to fetch config");
+  return res.json();
+}
+
+let config;
+
+// -----------------------------
 // Toolbar status messages
 // -----------------------------
 const messages = [
@@ -52,8 +63,9 @@ function renderToolbarIcons({ iconHTML = null } = {}) {
   if (!box) return;
   box.innerHTML = "";
 
+  const BIN_DAY = config?.bin.collection_day || 3; // default to Wednesday if not set
   // bin-day (Wednesday)
-  if (new Date().getDay() === 3) {
+  if (new Date().getDay() === BIN_DAY) {
     const bin = document.createElement("span");
     bin.className = "icon material-symbols-outlined";
     bin.textContent = "delete";
@@ -123,9 +135,16 @@ function initFeedingToggles() {
 // Bootstrap
 // -----------------------------
 document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    config = await fetchConfig();
+    console.log(config);
+    // apply config here if needed
+  } catch (err) {
+    console.error('Config fetch failed', err);
+  }
+
   // Live updates first so UI reacts quickly
   initSSE();
-
   // Panels & toolbar basics
   initTabs();
   renderToolbarIcons();

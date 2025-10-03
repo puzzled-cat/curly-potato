@@ -9,10 +9,10 @@ from flask import Response, stream_with_context
 from queue import Queue, Empty
 import time
 
-
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 CONFIG_FILE = os.path.join("data", "config.json")
 CONFIG = {}
+
 # CONFIG
 def load_config():
     global CONFIG
@@ -25,6 +25,10 @@ def load_config():
         CONFIG = {}
 
 load_config()
+
+@app.get("/api/config")
+def api_config():
+    return jsonify(CONFIG)
 
 REMIND_EVERY_MIN = 30
 STATE_FILE = os.path.join("data", "state.json")
