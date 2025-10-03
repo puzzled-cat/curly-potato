@@ -41,15 +41,14 @@ feeding = {t: False for t in FEED_TIMES}
 alerts_sent = {t: False for t in FEED_TIMES}
 last_alert_at = {t: None for t in FEED_TIMES}
 
-# --- Lists persistence (shopping / todos) ---
+# Lists persistence (shopping / todos)
 LISTS_FILE = os.path.join("data", "lists.json")
-lists = {}  # in-memory {name: {title, items[], updated_at}}
+lists = {} 
 
-TODO_LIST_NAME = "shopping"      # name of the list to use
-TODO_ITEM_TEXT = "Buy cat food"  # text of the reminder item
+TODO_LIST_NAME = "shopping" 
+TODO_ITEM_TEXT = "Buy cat food" 
 
-
-# --- SSE hub ---
+# SSE hub
 _sse_subs = set()
 
 def sse_publish(event: str, data: dict):
@@ -71,7 +70,6 @@ def sse_events():
     _sse_subs.add(q)
 
     def gen():
-        # suggest client retry after network drop
         yield "retry: 10000\n\n"
         while True:
             try:
@@ -120,7 +118,6 @@ def remove_catfood_todo():
                 print(f"[TODO] Failed to remove todo {item_id}: {dr.text}")
     except Exception as e:
         print(f"[TODO] Exception while removing cat food todo: {e}")
-
 
 def ensure_catfood_todo():
     """
@@ -220,7 +217,6 @@ def add_pouches(amount: int) -> int:
         # inside add_pouches(...) after save_food()
         sse_publish("pouches:update", {"pouches_left": food["pouches_left"], "updated_at": food["updated_at"]})
 
-
     # --- List integration ---
     if new_total <= 3:
         ensure_catfood_todo()
@@ -235,7 +231,6 @@ def add_pouches(amount: int) -> int:
         pass
 
     return new_total
-
 
 def set_pouches(total: int) -> int:
     """Directly set the total (server-side safeguard)."""
@@ -314,7 +309,6 @@ def load_state():
         except Exception as e:
             print(f"[STATE] Failed to load: {e}")
 
-
 @app.route("/")
 def index():
     return render_template("index.html", feed_times=FEED_TIMES)
@@ -354,7 +348,6 @@ def api_food_set():
     return jsonify({"pouches_left": new_total})
 # ---------- end Pouches API ----------
 
-
 @app.get("/api/feeding")
 def get_feeding():
     return jsonify(feeding)
@@ -390,7 +383,6 @@ def set_feeding():
         sse_publish("feeding:update", {"feeding": feeding})
 
     return jsonify(feeding)
-
 
 def parse_iso(s):
     return datetime.fromisoformat(s) if s else None

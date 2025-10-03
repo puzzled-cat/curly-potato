@@ -24,17 +24,35 @@ let config;
 const messages = [
   "Remember to stay hydrated!",
   "Remember to do the recycling!",
+  "Tea break time? You’ve earned it.",
+  "A tidy space is a tidy mind.",
 ];
-let currentIndex = 0;
 
-function setStatus(text = "") {
-  const el = document.getElementById("statusText");
-  if (el) el.textContent = text;
+let statusMessages = [...messages];
+let currentMsgIndex = 0;
+
+async function fetchTodoMessages() {
+  try {
+    const res = await fetch('/api/lists/todo');
+    if (!res.ok) throw new Error('Failed to fetch todo list');
+    const data = await res.json();
+
+    const todoMsgs = (data.items || [])
+      .filter(it => !it.done)
+      .map(it => `Todo: ${it.text}`);
+
+    statusMessages = [...messages, ...todoMsgs];
+  } catch (e) {
+    console.error('[Status] Todo fetch failed', e);
+    statusMessages = [...messages]; // fallback
+  }
 }
 
-function cycleMessages() {
-  setStatus(messages[currentIndex]);
-  currentIndex = (currentIndex + 1) % messages.length;
+function cycleStatusMessages() {
+  if (statusMessages.length === 0) return;
+  const msg = statusMessages[currentMsgIndex];
+  document.getElementById('statusText').textContent = msg;
+  currentMsgIndex = (currentMsgIndex + 1) % statusMessages.length;
 }
 
 // Clock + toolbar icons
@@ -150,8 +168,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(updateClock, 1000);
 
   // Rotate status messages
-  cycleMessages();
-  setInterval(cycleMessages, 10_000);
+  fetchTodoMessages();                          // initial
+  setInterval(fetchTodoMessages, 5 * 60 * 1000); // refresh every 5 min
+  setInterval(cycleStatusMessages, 10000);       // cycle messages every 10s
+
+  // Optional: update immediately when lists change via SSE
+  const es = new EventSource('/events');
+  es.addEventListener('lists:update', fetchTodoMessages);
 
   // Weather (Belfast defaults; change via options if needed)
 

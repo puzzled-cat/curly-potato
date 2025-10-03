@@ -329,11 +329,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* center horizontally */
   gap: 6px;
-  /* space between icon and text */
   margin: 0;
-  /* optional: reset default h3 margins */
 }
 
 #listSelect {
@@ -367,8 +364,7 @@ body {
 .list-col {
   display: flex;
   flex-direction: column;
-  max-height: 400px;
-  /* or a fixed value like 500px */
+  max-height: 350px;
 }
 
 .list-col .list-add {
@@ -411,22 +407,13 @@ body {
 }
 
 .list-items::-webkit-scrollbar-track {
-  background: transparent;
+  background: black;
   margin-top: 4px;
-  /* optional: top gap */
   margin-bottom: 4px;
-  /* optional: bottom gap */
 }
 
-/* Chrome, Edge, Safari */
 .list-items::-webkit-scrollbar {
   width: 6px;
-  /* thin scrollbar */
-}
-
-.list-items::-webkit-scrollbar-track {
-  background: transparent;
-  /* no background track */
 }
 
 .list-items::-webkit-scrollbar-thumb {

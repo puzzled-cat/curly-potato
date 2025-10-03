@@ -4,7 +4,6 @@
 
 import { fetchWeather } from './api.js';
 
-// ---- Defaults
 const DEFAULT_LAT = 54.58314393020901;
 const DEFAULT_LON = -5.898022460442155;
 const DEFAULT_REFRESH_MS = 10 * 60 * 1000; // 10 minutes
