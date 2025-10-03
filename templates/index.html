@@ -11,6 +11,7 @@
   </style>
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet" href="/static/keyboard.css" />
 </head>
 
 <body>
@@ -102,6 +103,7 @@
             <hr>
           </div>
 
+          <!-- data-virtualkeyboard add on elements needing OSK -->
           <div class="list-add">
             <input class="list-input" type="text" placeholder="Add new item…" />
             <button class="btn btn-primary list-add-btn">Add</button>
@@ -130,8 +132,10 @@
       </div>
     </section>
 
+    <div id="vk" aria-label="On-screen keyboard" hidden></div>
 
   </main>
+  <script src='/static/scripts/keyboard.js'></script>
   <script type="module" src="/static/scripts/main.js"></script>
 </body>
 
